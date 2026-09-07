@@ -13,8 +13,8 @@ import { Bilingual } from "@/components/ui/Bilingual";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Stars } from "@/components/ui/Stars";
 import { Meter } from "@/components/ui/Meter";
-import { MAX_HEARTS } from "@/lib/game/constants";
-import { attemptSeed, presentChoices } from "@/lib/game/present";
+import { MAX_HEARTS, QUESTIONS_PER_BOSS, QUESTIONS_PER_LEVEL } from "@/lib/game/constants";
+import { attemptSeed, pickLevelQuestions, presentChoices } from "@/lib/game/present";
 import { isCorrect, starsFor } from "@/lib/game/scoring";
 import { awardXp } from "@/lib/game/xp";
 import { useGameStore } from "@/lib/store/gameStore";
@@ -27,10 +27,26 @@ interface Attempt {
   skipped: boolean;
 }
 
+/**
+ * Гейт гідратації. Набір питань фіксується на старті бою через useState,
+ * тому Battle має монтуватися лише тоді, коли збереження вже прочитано —
+ * інакше вибірка щоразу спиралася б на порожній `seen`.
+ */
 export function BattleScreen({ levelId }: { levelId: string }) {
   const hydrated = useHydrated();
+  if (!hydrated) {
+    return (
+      <div className="mx-auto max-w-3xl px-5 py-24 sm:px-8">
+        <p className="eyebrow">Завантаження…</p>
+      </div>
+    );
+  }
+  return <Battle levelId={levelId} />;
+}
+
+function Battle({ levelId }: { levelId: string }) {
   const level = getLevel(levelId);
-  const questions = questionsOfLevel(levelId);
+  const pool = questionsOfLevel(levelId);
   const domain = level ? getDomain(level.domainId) : undefined;
 
   const recordAnswer = useGameStore((s) => s.recordAnswer);
@@ -40,6 +56,18 @@ export function BattleScreen({ levelId }: { levelId: string }) {
   // Номер спроби робить порядок варіантів іншим при кожному перепроходженні рівня.
   const attemptNo = useGameStore((s) => s.progress[levelId]?.attempts ?? 0);
   const seed = attemptSeed(attemptNo);
+  // Знімок «побачених» фіксується на старті бою: інакше набір перебудовувався б
+  // після кожної відповіді, бо recordAnswer одразу позначає питання побаченим.
+  const seenNow = useGameStore((s) => s.seen);
+  const [seenAtStart] = useState(seenNow);
+  const [questions] = useState(() =>
+    pickLevelQuestions(
+      pool,
+      seenAtStart,
+      level?.boss ? QUESTIONS_PER_BOSS : QUESTIONS_PER_LEVEL,
+      seed,
+    ),
+  );
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
@@ -111,21 +139,13 @@ export function BattleScreen({ levelId }: { levelId: string }) {
 
   const onTimeout = useCallback(() => submit(true), [submit]);
 
-  if (!level || !domain || questions.length === 0) {
+  if (!level || !domain || pool.length === 0 || questions.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-24 text-center sm:px-8">
         <p className="eyebrow">Рівень не знайдено</p>
         <ButtonLink href="/" className="mt-6">
           На карту
         </ButtonLink>
-      </div>
-    );
-  }
-
-  if (!hydrated) {
-    return (
-      <div className="mx-auto max-w-3xl px-5 py-24 sm:px-8">
-        <p className="eyebrow">Завантаження…</p>
       </div>
     );
   }

@@ -41,6 +41,8 @@ export interface PersistedState {
     codex: string[];
   };
   srs: Record<string, SrsCard>;
+  /** id питання → час останнього показу. Керує вибіркою питань рівня. */
+  seen: Record<string, number>;
   stats: {
     perDomain: Record<string, DomainStat>;
     totalAnswers: number;

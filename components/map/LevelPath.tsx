@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { levelsOfDomain } from "@/content";
+import { levelsOfDomain, questionsOfLevel } from "@/content";
 import type { Domain } from "@/lib/content/types";
 import { Stars } from "@/components/ui/Stars";
+import { QUESTIONS_PER_BOSS, QUESTIONS_PER_LEVEL } from "@/lib/game/constants";
 import { isLevelUnlocked, useGameStore } from "@/lib/store/gameStore";
 
 export function LevelPath({ domain }: { domain: Domain }) {
@@ -19,6 +20,9 @@ export function LevelPath({ domain }: { domain: Domain }) {
       />
       {levels.map((level, i) => {
         const progress = store.progress[level.id];
+        const pool = questionsOfLevel(level.id);
+        const perAttempt = level.boss ? QUESTIONS_PER_BOSS : QUESTIONS_PER_LEVEL;
+        const seenCount = pool.filter((q) => store.seen[q.id] !== undefined).length;
         const stars = progress?.stars ?? 0;
         const unlocked = isLevelUnlocked(store, level.id);
         const done = stars > 0;
@@ -64,7 +68,7 @@ export function LevelPath({ domain }: { domain: Domain }) {
                     : "Пройдіть попередній рівень"}
               </span>
               <span className="mono mt-1.5 block text-[0.66rem] text-muted">
-                {level.questionIds.length} питань
+                {perAttempt} питань за спробу · побачено {seenCount} з {pool.length}
                 {progress?.attempts ? ` · спроб: ${progress.attempts}` : ""}
               </span>
             </span>

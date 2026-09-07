@@ -13,7 +13,11 @@ import {
   translatedQuestionIds,
 } from "../content";
 import { domainSchema, levelSchema, questionSchema } from "../lib/content/schema";
-import { EXAM_QUESTIONS } from "../lib/game/constants";
+import {
+  EXAM_QUESTIONS,
+  QUESTIONS_PER_BOSS,
+  QUESTIONS_PER_LEVEL,
+} from "../lib/game/constants";
 import { examQuota } from "../lib/game/examBuilder";
 
 const errors: string[] = [];
@@ -58,21 +62,14 @@ for (const question of allQuestions) {
   }
 }
 
-// Кожен questionId рівня має існувати; кожне питання має бути прив'язане до рівня.
+// Пул кожного рівня має бути щонайменше на одну повну спробу.
 for (const level of allLevels) {
-  for (const qid of level.questionIds) {
-    if (!questionIds.has(qid)) {
-      errors.push(`Рівень ${level.id} посилається на неіснуюче питання ${qid}`);
-    }
-  }
-  if (questionsOfLevel(level.id).length === 0) {
+  const pool = questionsOfLevel(level.id).length;
+  const perAttempt = level.boss ? QUESTIONS_PER_BOSS : QUESTIONS_PER_LEVEL;
+  if (pool === 0) {
     errors.push(`Рівень ${level.id} не має жодного питання`);
-  }
-}
-const attached = new Set(allLevels.flatMap((l) => l.questionIds));
-for (const question of allQuestions) {
-  if (!attached.has(question.id)) {
-    errors.push(`Питання ${question.id} не включене до жодного рівня`);
+  } else if (pool < perAttempt) {
+    errors.push(`Рівень ${level.id}: пул ${pool} питань менший за спробу (${perAttempt})`);
   }
 }
 
@@ -164,6 +161,13 @@ console.log(`Рівнів: ${allLevels.length} (босів: ${allLevels.filter((
 console.log(`Питань: ${allQuestions.length}`);
 console.log(`Статей довідника: ${codexFiles.size}`);
 console.log(`Англійський дубль: ${translated.size}/${allQuestions.length}`);
+console.log("Пули рівнів (питань у пулі → скільки з них за спробу):");
+for (const domain of allDomains) {
+  const row = levelsOfDomain(domain.id)
+    .map((l) => `${l.id}=${questionsOfLevel(l.id).length}`)
+    .join(" ");
+  console.log(`  ${domain.id.padEnd(24)} ${row}`);
+}
 console.log(
   `Позиція правильної відповіді в сирих даних: ${Object.entries(positions)
     .sort()

@@ -91,6 +91,34 @@ await page.screenshot({ path: `${SHOTS}/13-english-only.png`, fullPage: true });
 await page.click('button:has-text("EN+UA")');
 await page.waitForTimeout(300);
 
+// 2b-2. Набір питань змінюється між спробами рівня
+async function questionSet() {
+  const seen = [];
+  await page.goto(`${BASE}/play/aa-1`, { waitUntil: "networkidle" });
+  for (let i = 0; i < 3; i++) {
+    await page.waitForSelector("ul li button, ol li");
+    seen.push((await page.locator("h2").first().innerText()).slice(0, 50));
+    const options = page.locator("ul li button");
+    if (await options.count()) await options.first().click();
+    await page.click("text=Відповісти");
+    await page.waitForSelector("text=/Правильно|Помилка|Рівень пройдено|Серця вичерпано/");
+    if (await page.locator("text=/Рівень пройдено|Серця вичерпано/").count()) break;
+    const next = page.locator("button", { hasText: /Далі|Підсумок/ });
+    if (await next.count()) await next.first().click();
+    await page.waitForTimeout(200);
+  }
+  return seen;
+}
+const setA = await questionSet();
+const setB = await questionSet();
+const repeated = setB.filter((q) => setA.includes(q)).length;
+log(`спроба 1: ${setA.length} питань, спроба 2: ${setB.length}, повторів: ${repeated}`);
+if (repeated === setB.length && setB.length > 0) {
+  fail("набір питань не змінився між спробами рівня");
+} else {
+  log("набір питань відрізняється між спробами");
+}
+
 // 2c. Порядок варіантів змінюється між спробами
 async function optionOrder() {
   await page.goto(`${BASE}/play/aa-1`, { waitUntil: "networkidle" });

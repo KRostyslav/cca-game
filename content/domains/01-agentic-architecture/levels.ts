@@ -11,7 +11,6 @@ export const levels: Level[] = [
     subtitle: "Що робить систему агентною і з чого складається цикл gather → act → verify.",
     boss: false,
     codexRef: "agentic-loop",
-    questionIds: ["aa-1-q1", "aa-1-q2", "aa-1-q3", "aa-1-q4", "aa-1-q5", "aa-1-q6"],
   },
   {
     id: "aa-2",
@@ -21,7 +20,6 @@ export const levels: Level[] = [
     subtitle: "Планування, розбиття на кроки і межа між workflow та автономним агентом.",
     boss: false,
     codexRef: "task-decomposition",
-    questionIds: ["aa-2-q1", "aa-2-q2", "aa-2-q3", "aa-2-q4", "aa-2-q5", "aa-2-q6"],
   },
   {
     id: "aa-3",
@@ -31,7 +29,6 @@ export const levels: Level[] = [
     subtitle: "Prompt chaining, routing, паралелізація, orchestrator-workers, evaluator-optimizer.",
     boss: false,
     codexRef: "orchestration-patterns",
-    questionIds: ["aa-3-q1", "aa-3-q2", "aa-3-q3", "aa-3-q4", "aa-3-q5", "aa-3-q6"],
   },
   {
     id: "aa-4",
@@ -41,7 +38,6 @@ export const levels: Level[] = [
     subtitle: "Коли віддавати роботу субагенту і як не втратити результат по дорозі.",
     boss: false,
     codexRef: "subagents",
-    questionIds: ["aa-4-q1", "aa-4-q2", "aa-4-q3", "aa-4-q4", "aa-4-q5", "aa-4-q6"],
   },
   {
     id: "aa-5",
@@ -51,7 +47,6 @@ export const levels: Level[] = [
     subtitle: "Agentic loop із коробки: сесії, дозволи, MCP, hooks у коді.",
     boss: false,
     codexRef: "agent-sdk",
-    questionIds: ["aa-5-q1", "aa-5-q2", "aa-5-q3", "aa-5-q4", "aa-5-q5", "aa-5-q6"],
   },
   {
     id: "aa-6",
@@ -61,7 +56,6 @@ export const levels: Level[] = [
     subtitle: "Дозволи, ліміти, точки підтвердження та зупинка агента, що пішов не туди.",
     boss: false,
     codexRef: "guardrails",
-    questionIds: ["aa-6-q1", "aa-6-q2", "aa-6-q3", "aa-6-q4", "aa-6-q5", "aa-6-q6"],
   },
   {
     id: "aa-boss",
@@ -71,6 +65,5 @@ export const levels: Level[] = [
     subtitle: "Три сценарії, у яких неправильна відповідь звучить як гарна інженерія.",
     boss: true,
     codexRef: "agentic-production",
-    questionIds: ["aa-b-q1", "aa-b-q2", "aa-b-q3", "aa-b-q4"],
   },
 ];

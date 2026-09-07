@@ -68,7 +68,6 @@ export const levelSchema = z.object({
   subtitle: z.string().min(1),
   boss: z.boolean(),
   codexRef: z.string().min(1),
-  questionIds: z.array(z.string().min(1)).min(1),
 });
 
 export const domainSchema = z.object({

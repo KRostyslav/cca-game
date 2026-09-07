@@ -65,7 +65,6 @@ export interface Level {
   subtitle: string;
   boss: boolean;
   codexRef: string;
-  questionIds: string[];
 }
 
 export interface Domain {

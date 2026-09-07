@@ -84,6 +84,7 @@ export function initialState(): PersistedState {
     progress: {},
     unlocked: { worlds: [worldOrder[0]], codex: [] },
     srs: {},
+    seen: {},
     stats: {
       perDomain: emptyDomainStats(),
       totalAnswers: 0,
@@ -177,7 +178,8 @@ export const useGameStore = create<GameStore>()(
               ? s.srs
               : { ...s.srs, [questionId]: review(existing, correct, now) };
           const stats = { ...s.stats, perDomain, totalAnswers: s.stats.totalAnswers + 1 };
-          return { stats, srs, achievements: syncAchievements({ ...s, stats, srs }, now) };
+          const seen = { ...s.seen, [questionId]: now };
+          return { stats, srs, seen, achievements: syncAchievements({ ...s, stats, srs, seen }, now) };
         }),
 
       completeLevel: (result) =>
@@ -279,6 +281,7 @@ export const useGameStore = create<GameStore>()(
           progress: s.progress,
           unlocked: s.unlocked,
           srs: s.srs,
+          seen: s.seen,
           stats: s.stats,
           achievements: s.achievements,
           settings: s.settings,
@@ -320,6 +323,7 @@ export const useGameStore = create<GameStore>()(
         progress: s.progress,
         unlocked: s.unlocked,
         srs: s.srs,
+        seen: s.seen,
         stats: s.stats,
         achievements: s.achievements,
         settings: s.settings,

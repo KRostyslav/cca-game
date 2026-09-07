@@ -201,3 +201,32 @@ describe("збереження", () => {
     expect(useGameStore.getState().player.name).toHaveLength(24);
   });
 });
+
+describe("облік побачених питань", () => {
+  it("відповідь позначає питання побаченим незалежно від правильності", () => {
+    const { recordAnswer } = useGameStore.getState();
+    recordAnswer({ questionId: "aa-1-q1", domainId: "agentic-architecture", correct: true });
+    recordAnswer({ questionId: "aa-1-q2", domainId: "agentic-architecture", correct: false });
+    const s = useGameStore.getState();
+    expect(s.seen["aa-1-q1"]).toBeGreaterThan(0);
+    expect(s.seen["aa-1-q2"]).toBeGreaterThan(0);
+    expect(s.seen["aa-1-q3"]).toBeUndefined();
+  });
+
+  it("побачені питання переживають експорт та імпорт", () => {
+    useGameStore.getState().createPlayer("Архітектор");
+    useGameStore
+      .getState()
+      .recordAnswer({ questionId: "aa-1-q1", domainId: "agentic-architecture", correct: true });
+    const dump = useGameStore.getState().exportSave();
+    useGameStore.getState().resetProgress();
+    useGameStore.getState().importSave(dump);
+    expect(useGameStore.getState().seen["aa-1-q1"]).toBeGreaterThan(0);
+  });
+
+  it("старе збереження без seen не ламає стан", () => {
+    const partial = JSON.stringify({ player: { name: "Старий", xp: 50 } });
+    expect(useGameStore.getState().importSave(partial)).toEqual({ ok: true });
+    expect(useGameStore.getState().seen).toEqual({});
+  });
+});

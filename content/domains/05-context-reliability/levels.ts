@@ -11,7 +11,6 @@ export const levels: Level[] = [
     subtitle: "Токени, ліміти, вартість і чому «просто вкинути все» не працює.",
     boss: false,
     codexRef: "context-window",
-    questionIds: ["cr-1-q1", "cr-1-q2", "cr-1-q3", "cr-1-q4"],
   },
   {
     id: "cr-2",
@@ -21,7 +20,6 @@ export const levels: Level[] = [
     subtitle: "Cache breakpoints, порядок блоків, TTL і що ламає кеш.",
     boss: false,
     codexRef: "prompt-caching",
-    questionIds: ["cr-2-q1", "cr-2-q2", "cr-2-q3", "cr-2-q4"],
   },
   {
     id: "cr-3",
@@ -31,7 +29,6 @@ export const levels: Level[] = [
     subtitle: "Довгі сесії: підсумовування, зовнішня пам'ять, файли як стан.",
     boss: false,
     codexRef: "compaction-memory",
-    questionIds: ["cr-3-q1", "cr-3-q2", "cr-3-q3", "cr-3-q4"],
   },
   {
     id: "cr-4",
@@ -41,7 +38,6 @@ export const levels: Level[] = [
     subtitle: "RAG проти повного дампа, just-in-time контекст, релевантність.",
     boss: false,
     codexRef: "retrieval-context",
-    questionIds: ["cr-4-q1", "cr-4-q2", "cr-4-q3", "cr-4-q4"],
   },
   {
     id: "cr-5",
@@ -51,7 +47,6 @@ export const levels: Level[] = [
     subtitle: "Ретраї з backoff, rate limits, ідемпотентність, деградація і спостережуваність.",
     boss: false,
     codexRef: "reliability-errors",
-    questionIds: ["cr-5-q1", "cr-5-q2", "cr-5-q3", "cr-5-q4"],
   },
   {
     id: "cr-boss",
@@ -61,6 +56,5 @@ export const levels: Level[] = [
     subtitle: "Агент, що працює годинами: контекст, вартість і відновлення після падіння.",
     boss: true,
     codexRef: "context-boss",
-    questionIds: ["cr-b-q1", "cr-b-q2", "cr-b-q3"],
   },
 ];

@@ -1,6 +1,6 @@
 "use client";
 
-import { getDomain, levelsOfDomain } from "@/content";
+import { getDomain, levelsOfDomain, questionsOfLevel } from "@/content";
 import type { DomainId } from "@/lib/content/types";
 import { LevelPath } from "./LevelPath";
 import { ButtonLink } from "@/components/ui/Button";
@@ -24,7 +24,7 @@ export function WorldView({ domainId }: { domainId: DomainId }) {
   }
 
   const summary = worldSummary(store, domainId);
-  const questions = levels.reduce((acc, l) => acc + l.questionIds.length, 0);
+  const questions = levels.reduce((acc, l) => acc + questionsOfLevel(l.id).length, 0);
 
   if (!summary.unlocked) {
     return (

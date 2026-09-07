@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allQuestions } from "@/content";
-import { attemptSeed, presentChoices } from "../present";
+import { attemptSeed, pickLevelQuestions, presentChoices } from "../present";
 import { hashString } from "../random";
 
 const single = allQuestions.find((q) => q.kind === "single")!;
@@ -87,5 +87,54 @@ describe("hashString", () => {
   it("детермінований і різний для різних рядків", () => {
     expect(hashString("aa-1-q1")).toBe(hashString("aa-1-q1"));
     expect(hashString("aa-1-q1")).not.toBe(hashString("aa-1-q2"));
+  });
+});
+
+describe("pickLevelQuestions", () => {
+  const pool = allQuestions.slice(0, 10);
+
+  it("повертає рівно count питань без дублікатів", () => {
+    const picked = pickLevelQuestions(pool, {}, 6, attemptSeed(1));
+    expect(picked).toHaveLength(6);
+    expect(new Set(picked.map((q) => q.id)).size).toBe(6);
+  });
+
+  it("непобачені йдуть перед побаченими", () => {
+    const seen = Object.fromEntries(pool.slice(0, 7).map((q) => [q.id, 1000]));
+    const picked = pickLevelQuestions(pool, seen, 5, attemptSeed(2));
+    // Непобачених рівно три — усі мають потрапити у вибірку.
+    const freshIds = pool.slice(7).map((q) => q.id);
+    for (const id of freshIds) {
+      expect(picked.map((q) => q.id)).toContain(id);
+    }
+    expect(picked.slice(0, 3).every((q) => freshIds.includes(q.id))).toBe(true);
+  });
+
+  it("серед побачених добираються найдавніші", () => {
+    const seen: Record<string, number> = {};
+    pool.forEach((q, i) => (seen[q.id] = 1000 + i));
+    const picked = pickLevelQuestions(pool, seen, 3, attemptSeed(3));
+    expect(picked.map((q) => q.id)).toEqual(pool.slice(0, 3).map((q) => q.id));
+  });
+
+  it("дві спроби поспіль дають різні набори", () => {
+    const first = pickLevelQuestions(pool, {}, 6, attemptSeed(0));
+    const seenAfter = Object.fromEntries(first.map((q) => [q.id, Date.now()]));
+    const second = pickLevelQuestions(pool, seenAfter, 6, attemptSeed(1));
+    const overlap = second.filter((q) => first.some((f) => f.id === q.id)).length;
+    // З пулу 10 і вибірки 6 перетин неминучий, але нових питань має бути більшість.
+    expect(overlap).toBeLessThanOrEqual(2);
+  });
+
+  it("пул, менший за count, не ламає вибірку", () => {
+    const tiny = pool.slice(0, 2);
+    expect(pickLevelQuestions(tiny, {}, 6, attemptSeed(4))).toHaveLength(2);
+    expect(pickLevelQuestions([], {}, 6, attemptSeed(5))).toHaveLength(0);
+  });
+
+  it("той самий seed і той самий стан дають той самий набір", () => {
+    const a = pickLevelQuestions(pool, {}, 6, attemptSeed(9)).map((q) => q.id);
+    const b = pickLevelQuestions(pool, {}, 6, attemptSeed(9)).map((q) => q.id);
+    expect(a).toEqual(b);
   });
 });

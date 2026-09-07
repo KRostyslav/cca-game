@@ -13,11 +13,23 @@ import { questions as peQuestions } from "./domains/03-prompt-engineering/questi
 import { questions as tdQuestions } from "./domains/04-tool-design-mcp/questions";
 import { questions as crQuestions } from "./domains/05-context-reliability/questions";
 
+import { questionsMore as aaMore } from "./domains/01-agentic-architecture/questions-more";
+import { questionsMore as ccMore } from "./domains/02-claude-code/questions-more";
+import { questionsMore as peMore } from "./domains/03-prompt-engineering/questions-more";
+import { questionsMore as tdMore } from "./domains/04-tool-design-mcp/questions-more";
+import { questionsMore as crMore } from "./domains/05-context-reliability/questions-more";
+
 import { questionsEn as aaEn } from "./domains/01-agentic-architecture/questions.en";
 import { questionsEn as ccEn } from "./domains/02-claude-code/questions.en";
 import { questionsEn as peEn } from "./domains/03-prompt-engineering/questions.en";
 import { questionsEn as tdEn } from "./domains/04-tool-design-mcp/questions.en";
 import { questionsEn as crEn } from "./domains/05-context-reliability/questions.en";
+
+import { questionsMoreEn as aaMoreEn } from "./domains/01-agentic-architecture/questions-more.en";
+import { questionsMoreEn as ccMoreEn } from "./domains/02-claude-code/questions-more.en";
+import { questionsMoreEn as peMoreEn } from "./domains/03-prompt-engineering/questions-more.en";
+import { questionsMoreEn as tdMoreEn } from "./domains/04-tool-design-mcp/questions-more.en";
+import { questionsMoreEn as crMoreEn } from "./domains/05-context-reliability/questions-more.en";
 
 export const allDomains: Domain[] = [...domains].sort((a, b) => a.index - b.index);
 
@@ -35,6 +47,11 @@ const translations: Record<string, QuestionEn> = {
   ...peEn,
   ...tdEn,
   ...crEn,
+  ...aaMoreEn,
+  ...ccMoreEn,
+  ...peMoreEn,
+  ...tdMoreEn,
+  ...crMoreEn,
 };
 
 /**
@@ -64,6 +81,11 @@ export const allQuestions: Question[] = [
   ...peQuestions,
   ...tdQuestions,
   ...crQuestions,
+  ...aaMore,
+  ...ccMore,
+  ...peMore,
+  ...tdMore,
+  ...crMore,
 ].map(withTranslation);
 
 /** Скільки питань уже мають справжній англійський дубль — для валідатора. */
@@ -74,6 +96,13 @@ export function translatedQuestionIds(): Set<string> {
 const domainById = new Map(allDomains.map((d) => [d.id, d]));
 const levelById = new Map(allLevels.map((l) => [l.id, l]));
 const questionById = new Map(allQuestions.map((q) => [q.id, q]));
+
+const questionsByLevel = new Map<string, Question[]>();
+for (const question of allQuestions) {
+  const bucket = questionsByLevel.get(question.levelId);
+  if (bucket) bucket.push(question);
+  else questionsByLevel.set(question.levelId, [question]);
+}
 
 export function getDomain(id: string): Domain | undefined {
   return domainById.get(id as DomainId);
@@ -91,12 +120,9 @@ export function levelsOfDomain(id: DomainId): Level[] {
   return allLevels.filter((l) => l.domainId === id).sort((a, b) => a.index - b.index);
 }
 
+/** Пул питань рівня. Зв'язок задається полем levelId самого питання — одне джерело правди. */
 export function questionsOfLevel(id: string): Question[] {
-  const level = levelById.get(id);
-  if (!level) return [];
-  return level.questionIds
-    .map((qid) => questionById.get(qid))
-    .filter((q): q is Question => Boolean(q));
+  return questionsByLevel.get(id) ?? [];
 }
 
 export function questionsOfDomain(id: DomainId): Question[] {

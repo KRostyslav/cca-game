@@ -41,6 +41,32 @@ export function presentChoices(question: Question, seed: number): PresentedChoic
   }));
 }
 
+/**
+ * Вибірка питань для однієї спроби рівня.
+ * Спершу йдуть ті, яких гравець ще не бачив, — щоб повторне проходження
+ * давало новий матеріал, а не перевірку пам'яті на позиції відповідей.
+ * Коли непобачених забракло, добираються найдавніше бачені.
+ */
+export function pickLevelQuestions(
+  pool: readonly Question[],
+  seen: Record<string, number>,
+  count: number,
+  seed: number,
+): Question[] {
+  const rng = makeRng(seed);
+  const fresh = shuffle(
+    pool.filter((q) => seen[q.id] === undefined),
+    rng,
+  );
+  if (fresh.length >= count) return fresh.slice(0, count);
+
+  const stale = pool
+    .filter((q) => seen[q.id] !== undefined)
+    .sort((a, b) => seen[a.id] - seen[b.id]);
+
+  return [...fresh, ...stale].slice(0, count);
+}
+
 /** Seed для конкретної спроби: різні спроби — різний порядок варіантів. */
 export function attemptSeed(salt: number): number {
   return (salt * 2654435761) >>> 0;

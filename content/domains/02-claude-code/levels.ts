@@ -11,7 +11,6 @@ export const levels: Level[] = [
     subtitle: "CLI, сесії, режими дозволів, plan mode і de-facto робочий цикл.",
     boss: false,
     codexRef: "claude-code-fundamentals",
-    questionIds: ["cc-1-q1", "cc-1-q2", "cc-1-q3", "cc-1-q4", "cc-1-q5"],
   },
   {
     id: "cc-2",
@@ -21,7 +20,6 @@ export const levels: Level[] = [
     subtitle: "Де живе пам'ять проєкту, як шари накладаються і що має пріоритет.",
     boss: false,
     codexRef: "claude-md-hierarchy",
-    questionIds: ["cc-2-q1", "cc-2-q2", "cc-2-q3", "cc-2-q4", "cc-2-q5"],
   },
   {
     id: "cc-3",
@@ -31,7 +29,6 @@ export const levels: Level[] = [
     subtitle: "settings.json, рівні налаштувань, allow/ask/deny та безпечні дефолти.",
     boss: false,
     codexRef: "settings-permissions",
-    questionIds: ["cc-3-q1", "cc-3-q2", "cc-3-q3", "cc-3-q4", "cc-3-q5"],
   },
   {
     id: "cc-4",
@@ -41,7 +38,6 @@ export const levels: Level[] = [
     subtitle: "Детермінована автоматизація: події, exit-коди, блокування дії.",
     boss: false,
     codexRef: "hooks",
-    questionIds: ["cc-4-q1", "cc-4-q2", "cc-4-q3", "cc-4-q4", "cc-4-q5"],
   },
   {
     id: "cc-5",
@@ -51,7 +47,6 @@ export const levels: Level[] = [
     subtitle: "Slash-команди, Agent Skills та власні субагенти в .claude/.",
     boss: false,
     codexRef: "commands-skills",
-    questionIds: ["cc-5-q1", "cc-5-q2", "cc-5-q3", "cc-5-q4", "cc-5-q5"],
   },
   {
     id: "cc-boss",
@@ -61,6 +56,5 @@ export const levels: Level[] = [
     subtitle: "Headless-режим, GitHub Actions, дозволи в автоматиці.",
     boss: true,
     codexRef: "claude-code-cicd",
-    questionIds: ["cc-b-q1", "cc-b-q2", "cc-b-q3", "cc-b-q4", "cc-b-q5"],
   },
 ];
