@@ -1,38 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CCA-F Quest
 
-## Getting Started
+Ігровий тренажер підготовки до сертифікації **Anthropic Claude Certified Architect – Foundations (CCA-F)**.
 
-First, run the development server:
+П'ять світів = п'ять доменів екзамену, 30 рівнів, 150 питань, 30 статей довідника,
+симуляція екзамену та інтервальне повторення помилок. Бекенду немає — увесь прогрес
+зберігається в `localStorage` браузера.
+
+## Швидкий старт
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Команди
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Команда | Що робить |
+|---|---|
+| `npm run dev` | Локальна розробка |
+| `npm run build` | Продакшн-білд (спершу автоматично проганяє валідацію контенту) |
+| `npm run start` | Запуск продакшн-збірки |
+| `npm run test` | Юніт- та інтеграційні тести (vitest) |
+| `npm run validate:content` | Перевірка цілісності питань, рівнів і довідника |
+| `npm run smoke` | Прохід гри у справжньому браузері + скріншоти в `.smoke/` (потрібен запущений `npm run start`) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Структура
 
-## Learn More
+```
+app/                    маршрути (App Router)
+  page.tsx              карта світів + онбординг
+  world/[domainId]/     карта рівнів світу
+  play/[levelId]/       бойовий екран
+  codex/[slug]/         довідник
+  train/                інтервальне повторення (SRS)
+  exam/                 симуляція екзамену + результат
+  stats/                профіль, магазин, ачівки, збереження
+components/             game / map / codex / ui
+content/
+  domains/<n>-<домен>/  domain.ts · levels.ts · questions.ts
+  codex/*.md            статті довідника
+lib/
+  content/              типи, zod-схеми, читання довідника
+  game/                 xp, scoring, srs, examBuilder, achievements, artifacts
+  store/                zustand + persist (localStorage)
+scripts/                валідація контенту, browser smoke test
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Ігрова механіка
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Бій** — 5–6 питань, 5 сердець; помилка коштує серце, 0 сердець = провал рівня.
+- **Комбо** — 3 правильні поспіль дають ×1.5 XP, 5 і більше — ×2.
+- **Зірки** — 3 ★ без помилок, 2 ★ з однією, 1 ★ за проходження.
+- **Розблокування** — наступний рівень від 1 ★; бос світу вимагає ≥2 ★ на всіх його рівнях;
+  бос відкриває наступний світ і статтю довідника.
+- **Артефакти** — Prompt Cache (+серце), Extended Thinking (−2 хибні варіанти),
+  Subagent (−1 варіант + підказка), Compact Context (пропустити питання).
+  Купуються за кредити, які нараховуються паралельно з XP.
+- **SRS** — помилки потрапляють у чергу Leitner (1 → 3 → 7 → 14 → 30 днів).
+- **Екзамен** — 60 питань за 120 хвилин, шкала 0–1000, прохідний 720; розподіл питань
+  за вагами доменів (27 / 20 / 20 / 18 / 15 %).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Як додати чи змінити контент
 
-## Deploy on Vercel
+1. Питання — у `content/domains/<домен>/questions.ts`. Кожне має пояснення,
+   `whyWrong` для кожного хибного варіанта та `codexRef`.
+2. Стаття довідника — `content/codex/<slug>.md` із frontmatter `title`, `domain`, `summary`.
+   Посилання між статтями пишуться як `[[slug]]`.
+3. Прогнати `npm run validate:content` — він перевіряє схеми, зв'язність посилань,
+   унікальність id і відповідність розподілу питань вагам екзамену.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Деплой на Vercel
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 # cca-game
+=======
+```bash
+npx vercel          # перший деплой
+npx vercel --prod   # продакшн
+```
+
+Або підключити репозиторій на vercel.com — Next.js визначається автоматично,
+змінні середовища не потрібні. Білд-команда стандартна (`npm run build`), і вона
+сама виконує валідацію контенту перед збіркою.
+
+## Джерела структури екзамену
+
+Ваги доменів і формат (60 питань / 120 хв / 720 з 1000) взяті з публічних гайдів
+з підготовки до CCA-F. Якщо Anthropic оновить blueprint, правити треба лише
+`content/domains/domains.ts` — решта (квоти екзамену, валідація) підлаштується сама.

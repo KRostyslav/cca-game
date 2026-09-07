@@ -1,0 +1,66 @@
+import type { Level } from "@/lib/content/types";
+
+const d = "claude-code" as const;
+
+export const levels: Level[] = [
+  {
+    id: "cc-1",
+    domainId: d,
+    index: 1,
+    title: "Основи Claude Code",
+    subtitle: "CLI, сесії, режими дозволів, plan mode і de-facto робочий цикл.",
+    boss: false,
+    codexRef: "claude-code-fundamentals",
+    questionIds: ["cc-1-q1", "cc-1-q2", "cc-1-q3", "cc-1-q4", "cc-1-q5"],
+  },
+  {
+    id: "cc-2",
+    domainId: d,
+    index: 2,
+    title: "Ієрархія CLAUDE.md",
+    subtitle: "Де живе пам'ять проєкту, як шари накладаються і що має пріоритет.",
+    boss: false,
+    codexRef: "claude-md-hierarchy",
+    questionIds: ["cc-2-q1", "cc-2-q2", "cc-2-q3", "cc-2-q4", "cc-2-q5"],
+  },
+  {
+    id: "cc-3",
+    domainId: d,
+    index: 3,
+    title: "Settings і permissions",
+    subtitle: "settings.json, рівні налаштувань, allow/ask/deny та безпечні дефолти.",
+    boss: false,
+    codexRef: "settings-permissions",
+    questionIds: ["cc-3-q1", "cc-3-q2", "cc-3-q3", "cc-3-q4", "cc-3-q5"],
+  },
+  {
+    id: "cc-4",
+    domainId: d,
+    index: 4,
+    title: "Hooks",
+    subtitle: "Детермінована автоматизація: події, exit-коди, блокування дії.",
+    boss: false,
+    codexRef: "hooks",
+    questionIds: ["cc-4-q1", "cc-4-q2", "cc-4-q3", "cc-4-q4", "cc-4-q5"],
+  },
+  {
+    id: "cc-5",
+    domainId: d,
+    index: 5,
+    title: "Команди, skills і subagents",
+    subtitle: "Slash-команди, Agent Skills та власні субагенти в .claude/.",
+    boss: false,
+    codexRef: "commands-skills",
+    questionIds: ["cc-5-q1", "cc-5-q2", "cc-5-q3", "cc-5-q4", "cc-5-q5"],
+  },
+  {
+    id: "cc-boss",
+    domainId: d,
+    index: 6,
+    title: "БОС: Claude Code у CI/CD",
+    subtitle: "Headless-режим, GitHub Actions, дозволи в автоматиці.",
+    boss: true,
+    codexRef: "claude-code-cicd",
+    questionIds: ["cc-b-q1", "cc-b-q2", "cc-b-q3", "cc-b-q4", "cc-b-q5"],
+  },
+];
