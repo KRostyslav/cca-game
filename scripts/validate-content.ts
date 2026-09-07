@@ -4,7 +4,14 @@
  */
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { allDomains, allLevels, allQuestions, levelsOfDomain, questionsOfLevel } from "../content";
+import {
+  allDomains,
+  allLevels,
+  allQuestions,
+  levelsOfDomain,
+  questionsOfLevel,
+  translatedQuestionIds,
+} from "../content";
 import { domainSchema, levelSchema, questionSchema } from "../lib/content/schema";
 import { EXAM_QUESTIONS } from "../lib/game/constants";
 import { examQuota } from "../lib/game/examBuilder";
@@ -69,6 +76,43 @@ for (const question of allQuestions) {
   }
 }
 
+// Англійський дубль: без нього гра не готує до формулювань справжнього екзамену.
+const translated = translatedQuestionIds();
+const missingEn: string[] = [];
+for (const question of allQuestions) {
+  if (!translated.has(question.id)) {
+    missingEn.push(question.id);
+    continue;
+  }
+  const ids = new Set(question.choices.map((c) => c.id));
+  const enIds = new Set(Object.keys(question.en.choices));
+  for (const id of ids) {
+    if (!enIds.has(id)) errors.push(`${question.id}: немає англійського тексту варіанта "${id}"`);
+  }
+  for (const id of enIds) {
+    if (!ids.has(id)) errors.push(`${question.id}: en.choices містить неіснуючий варіант "${id}"`);
+  }
+  for (const choice of question.choices) {
+    if (choice.whyWrong && !question.en.whyWrong?.[choice.id]) {
+      errors.push(`${question.id}: немає англійського whyWrong для варіанта "${choice.id}"`);
+    }
+  }
+  if (Boolean(question.scenario) !== Boolean(question.en.scenario)) {
+    errors.push(`${question.id}: scenario має бути присутній в обох мовах або в жодній`);
+  }
+  if (question.en.prompt.trim().length < 10) {
+    errors.push(`${question.id}: англійський prompt надто короткий`);
+  }
+  if (question.en.explanation.trim().length < 20) {
+    errors.push(`${question.id}: англійське пояснення надто коротке`);
+  }
+}
+if (missingEn.length > 0) {
+  errors.push(
+    `Без англійського дубля: ${missingEn.length} питань (${missingEn.slice(0, 5).join(", ")}${missingEn.length > 5 ? ", …" : ""})`,
+  );
+}
+
 // Довідники: кожен codexRef має мати файл, і кожен рівень — свою статтю.
 const codexDir = join(process.cwd(), "content", "codex");
 const codexFiles = existsSync(codexDir)
@@ -105,10 +149,27 @@ if (quotaSum !== EXAM_QUESTIONS) {
   errors.push(`Квота екзамену дає ${quotaSum} питань замість ${EXAM_QUESTIONS}`);
 }
 
+// Довідково: перекос у сирих даних не критичний — порядок варіантів
+// перемішується на показі (lib/game/present.ts), — але зсув видно одразу.
+const positions: Record<string, number> = {};
+for (const question of allQuestions) {
+  if (question.kind === "order") continue;
+  const at = question.choices.findIndex((c) => question.correct.includes(c.id));
+  const key = String.fromCharCode(97 + at);
+  positions[key] = (positions[key] ?? 0) + 1;
+}
+
 console.log(`Доменів: ${allDomains.length}`);
 console.log(`Рівнів: ${allLevels.length} (босів: ${allLevels.filter((l) => l.boss).length})`);
 console.log(`Питань: ${allQuestions.length}`);
 console.log(`Статей довідника: ${codexFiles.size}`);
+console.log(`Англійський дубль: ${translated.size}/${allQuestions.length}`);
+console.log(
+  `Позиція правильної відповіді в сирих даних: ${Object.entries(positions)
+    .sort()
+    .map(([k, v]) => `${k}=${v}`)
+    .join(" ")} (на показі перемішується)`,
+);
 for (const domain of allDomains) {
   const count = allQuestions.filter((q) => q.domainId === domain.id).length;
   console.log(

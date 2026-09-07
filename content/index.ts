@@ -1,4 +1,4 @@
-import type { Domain, DomainId, Level, Question } from "@/lib/content/types";
+import type { Domain, DomainId, Level, Question, QuestionEn, QuestionSource } from "@/lib/content/types";
 import { domains } from "./domains/domains";
 
 import { levels as aaLevels } from "./domains/01-agentic-architecture/levels";
@@ -13,6 +13,12 @@ import { questions as peQuestions } from "./domains/03-prompt-engineering/questi
 import { questions as tdQuestions } from "./domains/04-tool-design-mcp/questions";
 import { questions as crQuestions } from "./domains/05-context-reliability/questions";
 
+import { questionsEn as aaEn } from "./domains/01-agentic-architecture/questions.en";
+import { questionsEn as ccEn } from "./domains/02-claude-code/questions.en";
+import { questionsEn as peEn } from "./domains/03-prompt-engineering/questions.en";
+import { questionsEn as tdEn } from "./domains/04-tool-design-mcp/questions.en";
+import { questionsEn as crEn } from "./domains/05-context-reliability/questions.en";
+
 export const allDomains: Domain[] = [...domains].sort((a, b) => a.index - b.index);
 
 export const allLevels: Level[] = [
@@ -23,13 +29,47 @@ export const allLevels: Level[] = [
   ...crLevels,
 ];
 
+const translations: Record<string, QuestionEn> = {
+  ...aaEn,
+  ...ccEn,
+  ...peEn,
+  ...tdEn,
+  ...crEn,
+};
+
+/**
+ * Поки переклад питання не написаний, англійська версія дзеркалить українську:
+ * гра лишається робочою, а прогалину ловить `npm run validate:content`.
+ */
+function withTranslation(question: QuestionSource): Question {
+  const en = translations[question.id];
+  if (en) return { ...question, en };
+  return {
+    ...question,
+    en: {
+      prompt: question.prompt,
+      scenario: question.scenario,
+      explanation: question.explanation,
+      choices: Object.fromEntries(question.choices.map((c) => [c.id, c.text])),
+      whyWrong: Object.fromEntries(
+        question.choices.filter((c) => c.whyWrong).map((c) => [c.id, c.whyWrong!]),
+      ),
+    },
+  };
+}
+
 export const allQuestions: Question[] = [
   ...aaQuestions,
   ...ccQuestions,
   ...peQuestions,
   ...tdQuestions,
   ...crQuestions,
-];
+].map(withTranslation);
+
+/** Скільки питань уже мають справжній англійський дубль — для валідатора. */
+export function translatedQuestionIds(): Set<string> {
+  return new Set(Object.keys(translations));
+}
 
 const domainById = new Map(allDomains.map((d) => [d.id, d]));
 const levelById = new Map(allLevels.map((l) => [l.id, l]));

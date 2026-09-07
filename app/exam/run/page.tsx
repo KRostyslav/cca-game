@@ -186,6 +186,7 @@ export default function ExamRunPage() {
         <QuestionView
           key={question.id}
           question={question}
+          seed={session.seed}
           selected={selected}
           eliminated={[]}
           locked={false}

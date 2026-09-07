@@ -7,6 +7,7 @@ import { useHydrated } from "@/lib/store/useHydrated";
 import { levelProgress, titleForLevel } from "@/lib/game/xp";
 import { dueQuestionIds } from "@/lib/game/srs";
 import { useNow } from "@/lib/game/useNow";
+import { LanguageToggle } from "./LanguageToggle";
 import { useMemo } from "react";
 
 const NAV = [
@@ -66,6 +67,7 @@ export function SiteHeader() {
         )}
 
         <div className="ml-auto flex items-center gap-4">
+          <LanguageToggle />
           {hydrated && player.name ? (
             <>
               <div className="hidden text-right sm:block">

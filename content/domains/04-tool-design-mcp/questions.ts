@@ -1,8 +1,8 @@
-import type { Question } from "@/lib/content/types";
+import type { QuestionSource } from "@/lib/content/types";
 
 const d = "tool-design-mcp" as const;
 
-export const questions: Question[] = [
+export const questions: QuestionSource[] = [
   // ── Рівень 1: Основи дизайну інструментів ───────────────────────────────
   {
     id: "td-1-q1",

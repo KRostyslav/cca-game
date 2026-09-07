@@ -18,3 +18,16 @@ export function shuffle<T>(items: readonly T[], rng: () => number): T[] {
   }
   return out;
 }
+
+/**
+ * Стабільний хеш рядка (FNV-1a) — щоб з id питання отримати числовий seed.
+ * Потрібен саме детермінований: порядок варіантів не має стрибати між перерендерами.
+ */
+export function hashString(value: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}

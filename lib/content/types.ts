@@ -17,7 +17,19 @@ export interface Choice {
   whyWrong?: string;
 }
 
-export interface Question {
+/** Англійський дубль: реальний екзамен CCA-F складається англійською. */
+export interface QuestionEn {
+  prompt: string;
+  scenario?: string;
+  explanation: string;
+  /** id варіанта → текст англійською */
+  choices: Record<string, string>;
+  /** id хибного варіанта → розбір англійською */
+  whyWrong?: Record<string, string>;
+}
+
+/** Питання так, як воно записане у файлі контенту — без англійського дубля. */
+export interface QuestionSource {
   id: string;
   domainId: DomainId;
   levelId: string;
@@ -37,6 +49,11 @@ export interface Question {
   explanation: string;
   /** Слаг статті довідника: content/codex/<codexRef>.md */
   codexRef: string;
+}
+
+/** Питання, готове до показу: український оригінал плюс англійський дубль. */
+export interface Question extends QuestionSource {
+  en: QuestionEn;
 }
 
 export interface Level {

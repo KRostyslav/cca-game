@@ -61,8 +61,10 @@ for (let i = 0; i < 8; i++) {
     await buttons.first().click();
   }
   await page.click("text=Відповісти");
-  await page.waitForSelector("text=/Правильно|Помилка/");
+  // Відповідаємо навмання, тож рівень може завершитися провалом раніше за питання.
+  await page.waitForSelector("text=/Правильно|Помилка|Рівень пройдено|Серця вичерпано/");
   answered++;
+  if (await page.locator("text=/Рівень пройдено|Серця вичерпано/").count()) break;
   if (answered === 1) await page.screenshot({ path: `${SHOTS}/05-feedback.png`, fullPage: true });
   const nextBtn = page.locator("button", { hasText: /Далі|Підсумок/ });
   if (await nextBtn.count()) await nextBtn.first().click();
@@ -70,6 +72,41 @@ for (let i = 0; i < 8; i++) {
 }
 log(`відповіли на ${answered} питань`);
 await page.screenshot({ path: `${SHOTS}/06-result.png`, fullPage: true });
+
+// 2b. Двомовність і перемикач мови
+await page.goto(`${BASE}/play/aa-1`, { waitUntil: "networkidle" });
+await page.waitForSelector("ul li button");
+const bothText = await page.locator("h2").first().innerText();
+if (!/[a-zA-Z]/.test(bothText) || !/[а-яіїєґА-ЯІЇЄҐ]/.test(bothText)) {
+  fail(`режим EN+UA не показує обидві мови: ${bothText.slice(0, 80)}`);
+} else {
+  log("режим EN+UA показує англійський і український текст");
+}
+await page.click('button:has-text("EN"):not(:has-text("UA"))');
+await page.waitForTimeout(300);
+const enOnly = await page.locator("h2").first().innerText();
+if (/[а-яіїєґА-ЯІЇЄҐ]/.test(enOnly)) fail("режим EN лишає український текст");
+else log("режим EN лишає лише англійську");
+await page.screenshot({ path: `${SHOTS}/13-english-only.png`, fullPage: true });
+await page.click('button:has-text("EN+UA")');
+await page.waitForTimeout(300);
+
+// 2c. Порядок варіантів змінюється між спробами
+async function optionOrder() {
+  await page.goto(`${BASE}/play/aa-1`, { waitUntil: "networkidle" });
+  await page.waitForSelector("ul li button");
+  return (await page.locator("ul li button").allInnerTexts()).map((t) => t.slice(0, 40)).join("|");
+}
+const before = await optionOrder();
+await page.evaluate(() => {
+  const key = "cca-quest-save-v1";
+  const save = JSON.parse(localStorage.getItem(key));
+  save.state.progress["aa-1"] = { stars: 1, bestAccuracy: 0.5, attempts: 9, completedAt: Date.now() };
+  localStorage.setItem(key, JSON.stringify(save));
+});
+const after = await optionOrder();
+if (before === after) fail("порядок варіантів не змінився між спробами");
+else log("порядок варіантів змінюється між спробами");
 
 // 3. Збереження переживає перезавантаження
 const saved = await page.evaluate(() => localStorage.getItem("cca-quest-save-v1"));

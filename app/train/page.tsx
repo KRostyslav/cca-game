@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 import { getQuestion } from "@/content";
 import type { Question } from "@/lib/content/types";
 import { QuestionView } from "@/components/game/QuestionView";
+import { Bilingual } from "@/components/ui/Bilingual";
 import { Button, ButtonLink } from "@/components/ui/Button";
+import { attemptSeed } from "@/lib/game/present";
 import { isCorrect } from "@/lib/game/scoring";
 import { dueQuestionIds, isMastered } from "@/lib/game/srs";
 import { useNow } from "@/lib/game/useNow";
@@ -18,6 +20,8 @@ export default function TrainPage() {
   const recordAnswer = useGameStore((s) => s.recordAnswer);
 
   const [queue, setQueue] = useState<Question[] | null>(null);
+  // Кожна сесія тренування отримує свій seed — порядок варіантів не запам'ятовується.
+  const [sessionSeed, setSessionSeed] = useState(0);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
   const [locked, setLocked] = useState(false);
@@ -45,6 +49,7 @@ export default function TrainPage() {
     const ids = dueQuestionIds(srs, Date.now()); // обробник події — час читати можна
     const items = ids.map(getQuestion).filter((q): q is Question => Boolean(q));
     setQueue(items);
+    setSessionSeed(attemptSeed(Date.now() % 100_000));
     setIndex(0);
     setSelected([]);
     setLocked(false);
@@ -133,6 +138,7 @@ export default function TrainPage() {
       <QuestionView
         key={question.id}
         question={question}
+        seed={sessionSeed}
         selected={selected}
         eliminated={[]}
         locked={locked}
@@ -146,9 +152,9 @@ export default function TrainPage() {
 
       {locked && (
         <div className="rise mt-7 border-l-2 border-coral bg-panel p-5">
-          <p className="text-[0.95rem] leading-relaxed text-parchment-dim">
-            {question.explanation}
-          </p>
+          <div className="text-[0.95rem] leading-relaxed text-parchment-dim">
+            <Bilingual en={question.en.explanation} uk={question.explanation} />
+          </div>
           <Link
             href={`/codex/${question.codexRef}`}
             className="mono mt-4 inline-block text-[0.68rem] uppercase tracking-[0.14em] text-coral hover:underline"

@@ -94,7 +94,7 @@ export function initialState(): PersistedState {
       examRuns: [],
     },
     achievements: {},
-    settings: { sound: true, reducedMotion: false },
+    settings: { sound: true, reducedMotion: false, language: "both" },
   };
 }
 

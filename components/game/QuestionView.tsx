@@ -2,16 +2,19 @@
 
 import { useMemo } from "react";
 import type { Question } from "@/lib/content/types";
+import { presentChoices } from "@/lib/game/present";
+import { Bilingual } from "@/components/ui/Bilingual";
 
-const KIND_LABEL: Record<Question["kind"], string> = {
-  single: "Одна правильна відповідь",
-  multi: "Кілька правильних відповідей",
-  scenario: "Сценарій · одна відповідь",
-  order: "Розставте у правильному порядку",
+const KIND_LABEL: Record<Question["kind"], { en: string; uk: string }> = {
+  single: { en: "One correct answer", uk: "Одна правильна відповідь" },
+  multi: { en: "Select all that apply", uk: "Кілька правильних відповідей" },
+  scenario: { en: "Scenario · one answer", uk: "Сценарій · одна відповідь" },
+  order: { en: "Put the steps in order", uk: "Розставте у правильному порядку" },
 };
 
 export function QuestionView({
   question,
+  seed,
   selected,
   eliminated,
   locked,
@@ -19,32 +22,37 @@ export function QuestionView({
   onReorder,
 }: {
   question: Question;
+  /** Порядок варіантів визначається цим seed — різні спроби дають різний показ. */
+  seed: number;
   selected: string[];
   eliminated: string[];
   locked: boolean;
   onToggle: (id: string) => void;
   onReorder: (ids: string[]) => void;
 }) {
+  const choices = useMemo(() => presentChoices(question, seed), [question, seed]);
   const correct = useMemo(() => new Set(question.correct), [question]);
   const isOrder = question.kind === "order";
 
   // Для order працюємо зі списком: обраний порядок + ще не розставлені.
   const orderPool = isOrder
-    ? [...selected, ...question.choices.map((c) => c.id).filter((id) => !selected.includes(id))]
+    ? [...selected, ...choices.map((c) => c.id).filter((id) => !selected.includes(id))]
     : [];
 
   return (
     <div>
-      <p className="eyebrow">{KIND_LABEL[question.kind]}</p>
+      <p className="eyebrow">
+        <Bilingual en={KIND_LABEL[question.kind].en} uk={KIND_LABEL[question.kind].uk} inline />
+      </p>
 
       {question.scenario && (
-        <div className="mt-4 border-l-2 border-gold/70 bg-panel/60 py-3 pl-4 pr-3 text-[0.92rem] leading-relaxed text-parchment-dim">
-          {question.scenario}
+        <div className="mt-4 border-l-2 border-gold/70 bg-panel/60 py-3 pl-4 pr-3 text-[0.92rem] leading-relaxed">
+          <Bilingual en={question.en.scenario ?? question.scenario} uk={question.scenario} />
         </div>
       )}
 
       <h2 className="display mt-5 text-[clamp(1.25rem,3.2vw,1.7rem)] leading-snug text-parchment">
-        {question.prompt}
+        <Bilingual en={question.en.prompt} uk={question.prompt} size="heading" />
       </h2>
 
       {question.code && (
@@ -58,7 +66,7 @@ export function QuestionView({
       {isOrder ? (
         <ol className="mt-7 space-y-2">
           {orderPool.map((id, index) => {
-            const choice = question.choices.find((c) => c.id === id)!;
+            const choice = choices.find((c) => c.id === id)!;
             const rightPlace = locked && question.correct[index] === id;
             return (
               <li
@@ -78,7 +86,9 @@ export function QuestionView({
                 >
                   {index + 1}
                 </span>
-                <span className="flex-1 text-[0.95rem] text-parchment-dim">{choice.text}</span>
+                <span className="flex-1 text-[0.95rem]">
+                  <Bilingual en={choice.textEn} uk={choice.text} />
+                </span>
                 {!locked && (
                   <span className="flex shrink-0 gap-1">
                     <ReorderButton
@@ -103,7 +113,7 @@ export function QuestionView({
         </ol>
       ) : (
         <ul className="mt-7 space-y-2.5">
-          {question.choices.map((choice) => {
+          {choices.map((choice) => {
             const isSelected = selected.includes(choice.id);
             const isEliminated = eliminated.includes(choice.id);
             const isCorrect = correct.has(choice.id);
@@ -146,15 +156,19 @@ export function QuestionView({
                             : "border-hairline-bright text-muted"
                     }`}
                   >
-                    {locked ? (isCorrect ? "✓" : isSelected ? "✕" : choice.id) : choice.id}
+                    {locked ? (isCorrect ? "✓" : isSelected ? "✕" : choice.label) : choice.label}
                   </span>
                   <span className="flex-1">
                     <span className="block text-[0.95rem] leading-relaxed text-parchment">
-                      {choice.text}
+                      <Bilingual en={choice.textEn} uk={choice.text} />
                     </span>
                     {locked && !isCorrect && choice.whyWrong && (
                       <span className="mt-2 block text-[0.85rem] leading-relaxed text-muted">
-                        {choice.whyWrong}
+                        <Bilingual
+                          en={choice.whyWrongEn ?? choice.whyWrong}
+                          uk={choice.whyWrong}
+                          tone="muted"
+                        />
                       </span>
                     )}
                   </span>

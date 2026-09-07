@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { allDomains, getQuestion } from "@/content";
+import { Bilingual } from "@/components/ui/Bilingual";
 import { ButtonLink } from "@/components/ui/Button";
 import { Meter } from "@/components/ui/Meter";
 import { EXAM_PASS_SCORE } from "@/lib/game/constants";
@@ -106,10 +107,12 @@ export default function ExamResultPage() {
               (q) =>
                 q && (
                   <li key={q.id} className="border-l-2 border-crimson bg-panel p-4">
-                    <p className="text-[0.92rem] text-parchment">{q.prompt}</p>
-                    <p className="mt-2 text-[0.85rem] leading-relaxed text-parchment-dim">
-                      {q.explanation}
-                    </p>
+                    <div className="text-[0.92rem] text-parchment">
+                      <Bilingual en={q.en.prompt} uk={q.prompt} />
+                    </div>
+                    <div className="mt-2 text-[0.85rem] leading-relaxed text-parchment-dim">
+                      <Bilingual en={q.en.explanation} uk={q.explanation} />
+                    </div>
                     <Link
                       href={`/codex/${q.codexRef}`}
                       className="mono mt-3 inline-block text-[0.66rem] uppercase tracking-[0.14em] text-coral hover:underline"

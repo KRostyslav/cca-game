@@ -25,6 +25,9 @@ export interface DomainStat {
   correct: number;
 }
 
+/** Режим показу текстів питань: англійська, українська або обидві. */
+export type LanguageMode = "en" | "uk" | "both";
+
 export interface PersistedState {
   player: {
     name: string;
@@ -51,5 +54,6 @@ export interface PersistedState {
   settings: {
     sound: boolean;
     reducedMotion: boolean;
+    language: LanguageMode;
   };
 }

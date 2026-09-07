@@ -1,8 +1,8 @@
-import type { Question } from "@/lib/content/types";
+import type { QuestionSource } from "@/lib/content/types";
 
 const d = "prompt-engineering" as const;
 
-export const questions: Question[] = [
+export const questions: QuestionSource[] = [
   // ── Рівень 1: Анатомія промпта ──────────────────────────────────────────
   {
     id: "pe-1-q1",

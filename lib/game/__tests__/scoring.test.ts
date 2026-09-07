@@ -12,14 +12,26 @@ const base = {
   codexRef: "agentic-loop",
 } as const;
 
-const single: Question = {
+/** Англійський дубль у цих тестах не перевіряється — дзеркалимо українську версію. */
+function withEn(q: Omit<Question, "en">): Question {
+  return {
+    ...q,
+    en: {
+      prompt: q.prompt,
+      explanation: q.explanation,
+      choices: Object.fromEntries(q.choices.map((c) => [c.id, c.text])),
+    },
+  };
+}
+
+const single: Question = withEn({
   ...base,
   kind: "single",
   choices: [{ id: "a", text: "a" }, { id: "b", text: "b", whyWrong: "ні" }],
   correct: ["a"],
-};
+});
 
-const multi: Question = {
+const multi: Question = withEn({
   ...base,
   kind: "multi",
   choices: [
@@ -28,14 +40,14 @@ const multi: Question = {
     { id: "c", text: "c", whyWrong: "ні" },
   ],
   correct: ["a", "b"],
-};
+});
 
-const ordered: Question = {
+const ordered: Question = withEn({
   ...base,
   kind: "order",
   choices: [{ id: "a", text: "a" }, { id: "b", text: "b" }, { id: "c", text: "c" }],
   correct: ["a", "b", "c"],
-};
+});
 
 describe("перевірка відповіді", () => {
   it("single", () => {

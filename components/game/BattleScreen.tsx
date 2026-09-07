@@ -9,10 +9,12 @@ import { BossTimer } from "./BossTimer";
 import { HeartBar } from "./HeartBar";
 import { ComboMeter } from "./ComboMeter";
 import { ArtifactTray } from "./ArtifactTray";
+import { Bilingual } from "@/components/ui/Bilingual";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Stars } from "@/components/ui/Stars";
 import { Meter } from "@/components/ui/Meter";
 import { MAX_HEARTS } from "@/lib/game/constants";
+import { attemptSeed, presentChoices } from "@/lib/game/present";
 import { isCorrect, starsFor } from "@/lib/game/scoring";
 import { awardXp } from "@/lib/game/xp";
 import { useGameStore } from "@/lib/store/gameStore";
@@ -35,6 +37,9 @@ export function BattleScreen({ levelId }: { levelId: string }) {
   const completeLevel = useGameStore((s) => s.completeLevel);
   const spendArtifact = useGameStore((s) => s.spendArtifact);
   const artifacts = useGameStore((s) => s.player.artifacts);
+  // Номер спроби робить порядок варіантів іншим при кожному перепроходженні рівня.
+  const attemptNo = useGameStore((s) => s.progress[levelId]?.attempts ?? 0);
+  const seed = attemptSeed(attemptNo);
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
@@ -176,7 +181,9 @@ export function BattleScreen({ levelId }: { levelId: string }) {
   };
 
   const eliminateWrong = (count: number) => {
-    const wrong = question.choices
+    // Беремо з показаного порядку, а не з порядку в даних: інакше підказка
+    // щоразу гасила б ті самі варіанти.
+    const wrong = presentChoices(question, seed)
       .map((c) => c.id)
       .filter((id) => !question.correct.includes(id) && !eliminated.includes(id));
     const taken = wrong.slice(0, count);
@@ -219,6 +226,7 @@ export function BattleScreen({ levelId }: { levelId: string }) {
         <QuestionView
           key={question.id}
           question={question}
+          seed={seed}
           selected={selected}
           eliminated={eliminated}
           locked={locked}
@@ -243,9 +251,9 @@ export function BattleScreen({ levelId }: { levelId: string }) {
           <p className={`eyebrow ${lastAttempt.correct ? "text-jade" : "text-crimson"}`}>
             {lastAttempt.correct ? "Правильно" : "Помилка · −1 ◆"}
           </p>
-          <p className="mt-3 text-[0.95rem] leading-relaxed text-parchment-dim">
-            {question.explanation}
-          </p>
+          <div className="mt-3 text-[0.95rem] leading-relaxed text-parchment-dim">
+            <Bilingual en={question.en.explanation} uk={question.explanation} />
+          </div>
           <Link
             href={`/codex/${question.codexRef}`}
             className="mono mt-4 inline-block text-[0.68rem] uppercase tracking-[0.14em] text-coral hover:underline"
@@ -373,10 +381,12 @@ function ResultScreen({
               .filter((a) => !a.correct)
               .map((a) => (
                 <li key={a.question.id} className="border-l-2 border-crimson bg-panel p-4">
-                  <p className="text-[0.92rem] text-parchment">{a.question.prompt}</p>
-                  <p className="mt-2 text-[0.85rem] leading-relaxed text-parchment-dim">
-                    {a.question.explanation}
-                  </p>
+                  <div className="text-[0.92rem] text-parchment">
+                    <Bilingual en={a.question.en.prompt} uk={a.question.prompt} />
+                  </div>
+                  <div className="mt-2 text-[0.85rem] leading-relaxed text-parchment-dim">
+                    <Bilingual en={a.question.en.explanation} uk={a.question.explanation} />
+                  </div>
                   <Link
                     href={`/codex/${a.question.codexRef}`}
                     className="mono mt-3 inline-block text-[0.66rem] uppercase tracking-[0.14em] text-coral hover:underline"
