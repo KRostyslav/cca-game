@@ -8,8 +8,10 @@ import { Meter } from "@/components/ui/Meter";
 import { worldSummary } from "@/lib/game/selectors";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useHydrated } from "@/lib/store/useHydrated";
+import { useTrackHref } from "@/lib/store/trackContext";
 
 export function WorldView({ domainId }: { domainId: DomainId }) {
+  const href = useTrackHref();
   const hydrated = useHydrated();
   const store = useGameStore();
   const domain = getDomain(domainId)!;
@@ -34,7 +36,7 @@ export function WorldView({ domainId }: { domainId: DomainId }) {
         <p className="mt-4 text-parchment-dim">
           Щоб потрапити сюди, здолайте боса попереднього світу.
         </p>
-        <ButtonLink href="/" className="mt-8">
+        <ButtonLink href={href("/")} className="mt-8">
           ← На карту
         </ButtonLink>
       </div>
@@ -70,7 +72,7 @@ export function WorldView({ domainId }: { domainId: DomainId }) {
             </div>
             <Meter value={summary.stars} max={summary.maxStars} color={domain.accent} />
           </div>
-          <ButtonLink href="/codex" variant="ghost">
+          <ButtonLink href={href("/codex")} variant="ghost">
             Довідник світу
           </ButtonLink>
         </div>

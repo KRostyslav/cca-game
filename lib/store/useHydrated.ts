@@ -1,16 +1,21 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useGameStore } from "./gameStore";
+import { useGameStoreApi, type GameStoreApi } from "./gameStore";
 
 /**
  * Стан із localStorage доступний лише після гідратації persist-middleware.
  * На сервері та в першому клієнтському рендері повертає false, тож розмітка збігається.
  */
-export function useHydrated(): boolean {
+export function useStoreHydrated(store: GameStoreApi): boolean {
   return useSyncExternalStore(
-    (onChange) => useGameStore.persist.onFinishHydration(onChange),
-    () => useGameStore.persist.hasHydrated(),
+    (onChange) => store.persist.onFinishHydration(onChange),
+    () => store.persist.hasHydrated(),
     () => false,
   );
+}
+
+/** Чи гідратований стор поточного тренажера. */
+export function useHydrated(): boolean {
+  return useStoreHydrated(useGameStoreApi());
 }

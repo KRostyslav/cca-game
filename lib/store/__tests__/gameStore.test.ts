@@ -1,6 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { levelsOfDomain, worldOrder } from "@/content";
-import { initialState, isLevelUnlocked, SAVE_KEY, useGameStore } from "../gameStore";
+import { levelsOfDomain, trackContent } from "@/content";
+import {
+  gameStores,
+  initialState,
+  isLevelUnlocked,
+  SAVE_KEY,
+  SAVE_KEYS,
+  setLanguageEverywhere,
+} from "../gameStore";
+
+const useGameStore = gameStores.architect;
+const devStore = gameStores.developer;
+const { worldOrder } = trackContent("architect");
 
 /** Мінімальний localStorage, щоб persist-middleware працював у node-середовищі. */
 class MemoryStorage implements Storage {
@@ -15,7 +26,8 @@ class MemoryStorage implements Storage {
 
 beforeEach(() => {
   globalThis.localStorage = new MemoryStorage();
-  useGameStore.setState({ ...initialState(), hasHydrated: true });
+  useGameStore.setState({ ...initialState("architect"), hasHydrated: true });
+  devStore.setState({ ...initialState("developer"), hasHydrated: true });
 });
 
 function clearLevel(levelId: string, stars: 1 | 2 | 3 = 3, xp = 100) {
@@ -228,5 +240,68 @@ describe("облік побачених питань", () => {
     const partial = JSON.stringify({ player: { name: "Старий", xp: 50 } });
     expect(useGameStore.getState().importSave(partial)).toEqual({ ok: true });
     expect(useGameStore.getState().seen).toEqual({});
+  });
+});
+
+describe("два тренажери", () => {
+  it("мають різні ключі збереження, Architect — старий", () => {
+    expect(SAVE_KEY).toBe("cca-quest-save-v1");
+    expect(SAVE_KEYS.architect).toBe(SAVE_KEY);
+    expect(SAVE_KEYS.developer).not.toBe(SAVE_KEY);
+  });
+
+  it("прогрес Developer не зачіпає Architect", () => {
+    devStore.getState().createPlayer("Dev");
+    devStore.getState().recordAnswer({ questionId: "da-1-q1", domainId: "dev-api", correct: false });
+    devStore.getState().completeLevel({
+      levelId: "da-1",
+      stars: 3,
+      accuracy: 1,
+      xpEarned: 50,
+      maxCombo: 3,
+      heartsLeft: 5,
+      failed: false,
+    });
+    const arch = useGameStore.getState();
+    expect(arch.player.name).toBe("");
+    expect(arch.player.xp).toBe(0);
+    expect(arch.progress["da-1"]).toBeUndefined();
+    expect(arch.srs["da-1-q1"]).toBeUndefined();
+    expect(devStore.getState().progress["da-1"].stars).toBe(3);
+  });
+
+  it("стартовий світ і ім'я за замовчуванням — свої для кожного треку", () => {
+    expect(devStore.getState().unlocked.worlds).toEqual([trackContent("developer").worldOrder[0]]);
+    devStore.getState().createPlayer("  ");
+    expect(devStore.getState().player.name).toBe("Developer");
+  });
+
+  it("бос Developer відкриває наступний світ Developer", () => {
+    devStore.getState().completeLevel({
+      levelId: "da-boss",
+      stars: 2,
+      accuracy: 1,
+      xpEarned: 10,
+      maxCombo: 1,
+      heartsLeft: 4,
+      failed: false,
+    });
+    expect(devStore.getState().unlocked.worlds).toContain(trackContent("developer").worldOrder[1]);
+    expect(useGameStore.getState().unlocked.worlds).toEqual([worldOrder[0]]);
+  });
+
+  it("збереження одного треку не імпортується в інший", () => {
+    devStore.getState().createPlayer("Dev");
+    const dump = devStore.getState().exportSave();
+    const result = useGameStore.getState().importSave(dump);
+    expect(result.ok).toBe(false);
+    expect(useGameStore.getState().player.name).toBe("");
+    expect(devStore.getState().importSave(dump)).toEqual({ ok: true });
+  });
+
+  it("мова питань спільна для обох треків", () => {
+    setLanguageEverywhere("en");
+    expect(useGameStore.getState().settings.language).toBe("en");
+    expect(devStore.getState().settings.language).toBe("en");
   });
 });

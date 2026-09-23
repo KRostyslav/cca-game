@@ -1,9 +1,21 @@
-export type DomainId =
+/** Тренажер: кожен має власні світи, питання, довідник і окреме збереження. */
+export type TrackId = "architect" | "developer";
+
+export type ArchitectDomainId =
   | "agentic-architecture"
   | "claude-code"
   | "prompt-engineering"
   | "tool-design-mcp"
   | "context-reliability";
+
+export type DeveloperDomainId =
+  | "dev-api"
+  | "dev-tools"
+  | "dev-claude-code"
+  | "dev-agents-mcp"
+  | "dev-production";
+
+export type DomainId = ArchitectDomainId | DeveloperDomainId;
 
 export type QuestionKind = "single" | "multi" | "scenario" | "order";
 
@@ -69,6 +81,7 @@ export interface Level {
 
 export interface Domain {
   id: DomainId;
+  track: TrackId;
   index: number;
   /** Офіційна англійська назва домену — саме так вона звучить на екзамені. */
   title: string;
@@ -88,4 +101,22 @@ export interface CodexEntry {
   title: string;
   summary: string;
   body: string;
+}
+
+export interface Track {
+  id: TrackId;
+  /** Короткий код сертифікації для логотипа: CCA-F, CCD-F. */
+  code: string;
+  /** Повна англійська назва сертифікації. */
+  title: string;
+  /** Коротка назва для перемикача. */
+  label: string;
+  /** Як звати гравця в цьому тренажері. */
+  playerNoun: string;
+  /** Кличний відмінок для звертання: «архітекторе», «розробнику». */
+  playerVocative: string;
+  /** Ім'я гравця, якщо він нічого не ввів. */
+  defaultPlayerName: string;
+  blurb: string;
+  accent: string;
 }

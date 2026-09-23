@@ -19,6 +19,7 @@ import { isCorrect, starsFor } from "@/lib/game/scoring";
 import { awardXp } from "@/lib/game/xp";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useHydrated } from "@/lib/store/useHydrated";
+import { useTrackHref } from "@/lib/store/trackContext";
 
 interface Attempt {
   question: Question;
@@ -45,6 +46,7 @@ export function BattleScreen({ levelId }: { levelId: string }) {
 }
 
 function Battle({ levelId }: { levelId: string }) {
+  const href = useTrackHref();
   const level = getLevel(levelId);
   const pool = questionsOfLevel(levelId);
   const domain = level ? getDomain(level.domainId) : undefined;
@@ -143,7 +145,7 @@ function Battle({ levelId }: { levelId: string }) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-24 text-center sm:px-8">
         <p className="eyebrow">Рівень не знайдено</p>
-        <ButtonLink href="/" className="mt-6">
+        <ButtonLink href={href("/")} className="mt-6">
           На карту
         </ButtonLink>
       </div>
@@ -227,7 +229,7 @@ function Battle({ levelId }: { levelId: string }) {
           }}
         />
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3">
-          <Link href={`/world/${domain.id}`} className="mono text-[0.68rem] text-muted hover:text-parchment">
+          <Link href={href(`/world/${domain.id}`)} className="mono text-[0.68rem] text-muted hover:text-parchment">
             ← {domain.titleUk}
           </Link>
           <span className="mono text-[0.68rem] text-parchment-dim">
@@ -275,7 +277,7 @@ function Battle({ levelId }: { levelId: string }) {
             <Bilingual en={question.en.explanation} uk={question.explanation} />
           </div>
           <Link
-            href={`/codex/${question.codexRef}`}
+            href={href(`/codex/${question.codexRef}`)}
             className="mono mt-4 inline-block text-[0.68rem] uppercase tracking-[0.14em] text-coral hover:underline"
           >
             Довідник: {question.codexRef} →
@@ -331,6 +333,7 @@ function ResultScreen({
   xp: number;
   accent: string;
 }) {
+  const href = useTrackHref();
   const level = getLevel(levelId)!;
   const mistakes = attempts.filter((a) => !a.correct).length;
   const stars = starsFor(mistakes, outcome === "lose");
@@ -375,16 +378,16 @@ function ResultScreen({
 
         <div className="mt-9 flex flex-wrap justify-center gap-3">
           {outcome === "win" && next ? (
-            <ButtonLink href={`/play/${next}`} variant="primary">
+            <ButtonLink href={href(`/play/${next}`)} variant="primary">
               Наступний рівень →
             </ButtonLink>
           ) : (
-            <ButtonLink href={`/play/${levelId}`} variant="primary">
+            <ButtonLink href={href(`/play/${levelId}`)} variant="primary">
               {outcome === "win" ? "Пройти знову" : "Спробувати ще раз"}
             </ButtonLink>
           )}
-          <ButtonLink href={`/world/${level.domainId}`}>До світу</ButtonLink>
-          <ButtonLink href={`/codex/${level.codexRef}`} variant="ghost">
+          <ButtonLink href={href(`/world/${level.domainId}`)}>До світу</ButtonLink>
+          <ButtonLink href={href(`/codex/${level.codexRef}`)} variant="ghost">
             Читати довідник
           </ButtonLink>
         </div>
@@ -408,7 +411,7 @@ function ResultScreen({
                     <Bilingual en={a.question.en.explanation} uk={a.question.explanation} />
                   </div>
                   <Link
-                    href={`/codex/${a.question.codexRef}`}
+                    href={href(`/codex/${a.question.codexRef}`)}
                     className="mono mt-3 inline-block text-[0.66rem] uppercase tracking-[0.14em] text-coral hover:underline"
                   >
                     {a.question.codexRef} →

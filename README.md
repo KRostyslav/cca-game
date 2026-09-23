@@ -1,10 +1,21 @@
-# CCA-F Quest
+# Claude Quest: CCA-F і CCD-F
 
-Ігровий тренажер підготовки до сертифікації **Anthropic Claude Certified Architect – Foundations (CCA-F)**.
+Два ігрові тренажери з однаковою механікою й дизайном:
 
-П'ять світів = п'ять доменів екзамену, 30 рівнів, **459 питань** (кожне — англійською
-і українською), 30 статей довідника, симуляція екзамену та інтервальне повторення
-помилок. Бекенду немає — увесь прогрес зберігається в `localStorage` браузера.
+| Тренажер | URL | Для кого | Збереження |
+|---|---|---|---|
+| **Architect** (CCA-F) | `/architect` | Claude Certified Architect – Foundations: архітектура агентних систем | `cca-quest-save-v1` |
+| **Developer** (CCD-F) | `/developer` | Розробники: Claude API і SDK, tool use, Claude Code, Agent SDK, MCP-сервери, evals і продакшн | `ccd-quest-save-v1` |
+
+У кожному тренажері 5 світів-доменів, 30 рівнів, сотні питань (кожне англійською
+та українською), 30 статей довідника, симуляція екзамену та інтервальне повторення
+помилок. Бекенду немає. Прогрес кожного тренажера зберігається окремо в `localStorage`
+браузера, а мова питань спільна для обох.
+
+На `/` відкривається екран вибору тренажера з прогресом обох. Перемикач
+`Architect | Developer` у хедері веде в той самий розділ іншого тренажера (тренування,
+екзамен, профіль, Codex). Старі URL без префікса (`/play/aa-1`, `/codex`, …)
+редіректять у `/architect/…`, тож закладки не ламаються.
 
 ## Швидкий старт
 
@@ -27,24 +38,34 @@ npm run dev      # http://localhost:3000
 ## Структура
 
 ```
-app/                    маршрути (App Router)
-  page.tsx              карта світів + онбординг
-  world/[domainId]/     карта рівнів світу
-  play/[levelId]/       бойовий екран
-  codex/[slug]/         довідник
-  train/                інтервальне повторення (SRS)
-  exam/                 симуляція екзамену + результат
-  stats/                профіль, магазин, ачівки, збереження
-components/             game / map / codex / ui
+app/                        маршрути (App Router)
+  page.tsx                  вибір тренажера
+  [track]/                  architect | developer (layout задає TrackProvider)
+    page.tsx                карта світів + онбординг
+    world/[domainId]/       карта рівнів світу
+    play/[levelId]/         бойовий екран
+    codex/[slug]/           довідник
+    train/                  інтервальне повторення (SRS)
+    exam/                   симуляція екзамену + результат
+    stats/                  профіль, магазин, ачівки, збереження
+components/                 game / map / codex / ui (TrackSwitcher — перемикач тренажерів)
 content/
-  domains/<n>-<домен>/  domain.ts · levels.ts · questions.ts · questions-more.ts (+ .en)
-  codex/*.md            статті довідника
+  tracks.ts                 опис двох тренажерів
+  index.ts                  реєстр контенту, trackContent(track)
+  domains/<n>-<домен>/      Architect: domains.ts · levels.ts · questions*.ts (+ .en)
+  codex/*.md                Architect: статті довідника
+  developer/domains/…       Developer: та сама структура
+  developer/codex/*.md      Developer: статті довідника
 lib/
-  content/              типи, zod-схеми, читання довідника
-  game/                 xp, scoring, srs, examBuilder, achievements, artifacts
-  store/                zustand + persist (localStorage)
-scripts/                валідація контенту, browser smoke test
+  content/                  типи, zod-схеми, читання довідника
+  game/                     xp, scoring, srs, examBuilder, achievements, artifacts
+  store/                    zustand + persist: окремий стор на тренажер, TrackProvider
+scripts/                    валідація контенту, перевірка домену, browser smoke test
 ```
+
+Компоненти беруть стор і контент поточного тренажера з контексту (`useGameStore`,
+`useTrackId`, `useTrackHref`), тому та сама розмітка обслуговує обидва треки. Id доменів,
+рівнів, питань і статей унікальні між треками, і валідатор це перевіряє.
 
 ## Мова питань
 
@@ -102,6 +123,9 @@ Seed різний для кожної спроби: у бою він поход�
 
 ## Як додати чи змінити контент
 
+Для Developer усе те саме, лише в `content/developer/…`. Перевірити один домен під час
+роботи можна командою `npx tsx scripts/check-domain.ts content/developer/domains/<домен>`.
+
 1. Питання — у `content/domains/<домен>/questions.ts`. Кожне має пояснення,
    `whyWrong` для кожного хибного варіанта та `codexRef`.
 2. Стаття довідника — `content/codex/<slug>.md` із frontmatter `title`, `domain`, `summary`.
@@ -134,3 +158,7 @@ npx vercel --prod   # продакшн
 Ваги доменів і формат (60 питань / 120 хв / 720 з 1000) взяті з публічних гайдів
 з підготовки до CCA-F. Якщо Anthropic оновить blueprint, правити треба лише
 `content/domains/domains.ts` — решта (квоти екзамену, валідація) підлаштується сама.
+
+Домени й ваги Developer (25 / 20 / 20 / 20 / 15 %) складено під практичні навички
+розробника і задано в `content/developer/domains/domains.ts`. Формат екзамену такий
+самий, як у CCA-F.

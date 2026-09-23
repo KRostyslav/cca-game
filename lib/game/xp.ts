@@ -1,4 +1,4 @@
-import type { Difficulty } from "@/lib/content/types";
+import type { Difficulty, TrackId } from "@/lib/content/types";
 
 /** XP за правильну відповідь до множників. */
 export function baseXp(difficulty: Difficulty, boss: boolean): number {
@@ -35,7 +35,9 @@ export function levelFromXp(xp: number): number {
   return level;
 }
 
-const TITLES: { minLevel: number; title: string }[] = [
+type Titles = { minLevel: number; title: string }[];
+
+const ARCHITECT_TITLES: Titles = [
   { minLevel: 18, title: "Claude Certified Architect" },
   { minLevel: 15, title: "Orchestrator" },
   { minLevel: 12, title: "Context Keeper" },
@@ -45,8 +47,23 @@ const TITLES: { minLevel: number; title: string }[] = [
   { minLevel: 1, title: "Intern" },
 ];
 
-export function titleForLevel(level: number): string {
-  return TITLES.find((t) => level >= t.minLevel)?.title ?? "Intern";
+const DEVELOPER_TITLES: Titles = [
+  { minLevel: 18, title: "Claude Certified Developer" },
+  { minLevel: 15, title: "Agent Builder" },
+  { minLevel: 12, title: "MCP Engineer" },
+  { minLevel: 9, title: "Tool Wielder" },
+  { minLevel: 6, title: "Stream Handler" },
+  { minLevel: 3, title: "API Caller" },
+  { minLevel: 1, title: "Intern" },
+];
+
+const TITLES: Record<TrackId, Titles> = {
+  architect: ARCHITECT_TITLES,
+  developer: DEVELOPER_TITLES,
+};
+
+export function titleForLevel(level: number, track: TrackId = "architect"): string {
+  return TITLES[track].find((t) => level >= t.minLevel)?.title ?? "Intern";
 }
 
 /** Прогрес до наступного рівня, 0..1. */

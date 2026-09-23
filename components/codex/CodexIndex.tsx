@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { allLevels } from "@/content";
+import { trackContent } from "@/content";
 import type { Domain, DomainId } from "@/lib/content/types";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useHydrated } from "@/lib/store/useHydrated";
+import { useTrackHref, useTrackId } from "@/lib/store/trackContext";
 
 interface Entry {
   slug: string;
@@ -15,6 +16,8 @@ interface Entry {
 }
 
 export function CodexIndex({ entries, domains }: { entries: Entry[]; domains: Domain[] }) {
+  const trackId = useTrackId();
+  const href = useTrackHref();
   const hydrated = useHydrated();
   const unlocked = useGameStore((s) => s.unlocked.codex);
   const [query, setQuery] = useState("");
@@ -63,11 +66,11 @@ export function CodexIndex({ entries, domains }: { entries: Entry[]; domains: Do
               <ul className="grid gap-px border border-hairline bg-hairline sm:grid-cols-2">
                 {group.map((entry) => {
                   const open = hydrated && unlocked.includes(entry.slug);
-                  const level = allLevels.find((l) => l.codexRef === entry.slug);
+                  const level = trackContent(trackId).levels.find((l) => l.codexRef === entry.slug);
                   return (
                     <li key={entry.slug} className="bg-panel">
                       <Link
-                        href={`/codex/${entry.slug}`}
+                        href={href(`/codex/${entry.slug}`)}
                         className={`block h-full p-4 transition-colors hover:bg-raised ${open ? "" : "opacity-55"}`}
                       >
                         <span className="flex items-start justify-between gap-3">

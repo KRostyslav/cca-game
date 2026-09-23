@@ -1,17 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { trackContent } from "@/content";
+import { getTrack } from "@/content/tracks";
 import { useGameStore } from "@/lib/store/gameStore";
+import { useTrackId } from "@/lib/store/trackContext";
 import { Button } from "@/components/ui/Button";
 
 export function Onboarding() {
+  const trackId = useTrackId();
+  const track = getTrack(trackId)!;
+  const content = trackContent(trackId);
   const createPlayer = useGameStore((s) => s.createPlayer);
   const touchStreak = useGameStore((s) => s.touchStreak);
   const [name, setName] = useState("");
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-16 sm:px-8 sm:py-24">
-      <p className="eyebrow rise">Anthropic · Claude Certified Architect – Foundations</p>
+      <p className="eyebrow rise">Anthropic · {track.title}</p>
       <h1 className="display rise mt-5 text-[clamp(2.6rem,9vw,4.5rem)]" style={{ animationDelay: "60ms" }}>
         Перед вами —<br />
         <span className="text-coral">п’ять світів</span> екзамену.
@@ -20,9 +26,9 @@ export function Onboarding() {
         className="rise mt-6 max-w-xl text-parchment-dim"
         style={{ animationDelay: "120ms" }}
       >
-        30 рівнів, 150 питань і довідник, що відкривається по мірі проходження. Кожен світ —
-        це домен екзамену, кожен бій — питання того ж типу, що на реальному CCA-F.
-        Прогрес зберігається у вашому браузері.
+        {content.levels.length} рівнів, {content.questions.length} питань і довідник, що
+        відкривається по мірі проходження. Кожен світ — це домен екзамену, кожен бій — питання
+        того ж типу, що на екзамені {track.code}. Прогрес зберігається у вашому браузері.
       </p>
 
       <form
@@ -35,7 +41,7 @@ export function Onboarding() {
         }}
       >
         <label className="eyebrow block" htmlFor="player-name">
-          Як вас звати, архітекторе?
+          Як вас звати, {track.playerVocative}?
         </label>
         <input
           id="player-name"

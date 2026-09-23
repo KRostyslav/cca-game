@@ -1,6 +1,6 @@
 "use client";
 
-import { useGameStore } from "@/lib/store/gameStore";
+import { setLanguageEverywhere, useGameStore } from "@/lib/store/gameStore";
 import { useHydrated } from "@/lib/store/useHydrated";
 import type { LanguageMode } from "@/lib/store/types";
 
@@ -13,7 +13,6 @@ const MODES: { id: LanguageMode; label: string; title: string }[] = [
 export function LanguageToggle() {
   const hydrated = useHydrated();
   const language = useGameStore((s) => s.settings.language);
-  const setSetting = useGameStore((s) => s.setSetting);
   const active = hydrated ? language : "both";
 
   return (
@@ -24,7 +23,7 @@ export function LanguageToggle() {
           type="button"
           title={mode.title}
           aria-pressed={active === mode.id}
-          onClick={() => setSetting("language", mode.id)}
+          onClick={() => setLanguageEverywhere(mode.id)}
           className={`mono px-2 py-1 text-[0.6rem] uppercase tracking-[0.1em] transition-colors ${
             active === mode.id
               ? "bg-coral text-void"

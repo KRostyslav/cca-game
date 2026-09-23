@@ -6,7 +6,9 @@
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 
-const BASE = process.env.BASE_URL ?? "http://localhost:3000";
+const ROOT = process.env.BASE_URL ?? "http://localhost:3000";
+// Основний прохід іде по тренажеру Architect; Developer перевіряється окремо наприкінці.
+const BASE = `${ROOT}/architect`;
 const SHOTS = process.env.SHOT_DIR ?? "./.smoke";
 mkdirSync(SHOTS, { recursive: true });
 
@@ -22,8 +24,8 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = [];
-page.on("pageerror", (e) => errors.push(String(e)));
-page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+page.on("pageerror", (e) => errors.push(`${page.url()}: ${e}`));
+page.on("console", (m) => m.type() === "error" && errors.push(`${page.url()}: ${m.text()}`));
 
 // 1. Онбординг
 await page.goto(BASE, { waitUntil: "networkidle" });
@@ -36,12 +38,12 @@ log("персонажа створено");
 await page.screenshot({ path: `${SHOTS}/02-map.png`, fullPage: true });
 
 // 2. Світ і бій
-await page.click('a[href="/world/agentic-architecture"]');
+await page.click('a[href="/architect/world/agentic-architecture"]');
 await page.waitForSelector("text=Долина Агентів");
 await page.waitForTimeout(1200);
 await page.screenshot({ path: `${SHOTS}/03-world.png`, fullPage: true });
 
-await page.click('a[href="/play/aa-1"]');
+await page.click('a[href="/architect/play/aa-1"]');
 await page.waitForSelector("text=Одна правильна відповідь");
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${SHOTS}/04-battle.png`, fullPage: true });
@@ -165,6 +167,43 @@ await page.goto(`${BASE}/train`, { waitUntil: "networkidle" });
 await page.screenshot({ path: `${SHOTS}/09-train.png`, fullPage: true });
 await page.goto(`${BASE}/stats`, { waitUntil: "networkidle" });
 await page.screenshot({ path: `${SHOTS}/10-stats.png`, fullPage: true });
+
+// 5b. Екран вибору, перемикач тренажерів, Developer і редірект старих URL
+await page.goto(ROOT, { waitUntil: "networkidle" });
+if (!(await page.locator("text=Оберіть").count())) fail("немає екрана вибору тренажера");
+await page.screenshot({ path: `${SHOTS}/14-choose-track.png`, fullPage: true });
+
+await page.goto(`${BASE}/train`, { waitUntil: "networkidle" });
+await page.click('header a[href="/developer/train"]');
+await page.waitForURL(`${ROOT}/developer/train`);
+log("перемикач у хедері веде в той самий розділ іншого тренажера");
+
+await page.goto(`${ROOT}/developer`, { waitUntil: "networkidle" });
+await page.fill("#player-name", "Dev");
+await page.click('button[type="submit"]');
+await page.waitForSelector("text=Карта світів");
+await page.goto(`${ROOT}/developer/play/da-1`, { waitUntil: "networkidle" });
+await page.waitForSelector("ul li button, ol li");
+await page.screenshot({ path: `${SHOTS}/15-developer-battle.png`, fullPage: true });
+const saves = await page.evaluate(() => ({
+  arch: JSON.parse(localStorage.getItem("cca-quest-save-v1") ?? "null")?.state.player.name,
+  dev: JSON.parse(localStorage.getItem("ccd-quest-save-v1") ?? "null")?.state.player.name,
+}));
+if (saves.arch !== "Ростислав" || saves.dev !== "Dev") {
+  fail(`збереження треків змішалися: ${JSON.stringify(saves)}`);
+} else {
+  log("Architect і Developer зберігаються окремо");
+}
+
+await page.goto(`${ROOT}/play/aa-1`, { waitUntil: "networkidle" });
+if (!page.url().endsWith("/architect/play/aa-1")) fail(`старий URL не редіректить: ${page.url()}`);
+else log("старі URL ведуть у тренажер Architect");
+
+// Окрема вкладка: очікуваний 404 не повинен потрапити в перелік помилок консолі.
+const probe = await browser.newPage();
+const foreign = await probe.goto(`${ROOT}/developer/play/aa-1`);
+await probe.close();
+if (foreign?.status() !== 404) fail(`рівень чужого треку має давати 404, а не ${foreign?.status()}`);
 
 // 6. Мобільний вигляд
 const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });

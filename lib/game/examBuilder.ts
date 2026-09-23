@@ -1,5 +1,5 @@
-import { allDomains, questionsOfDomain } from "@/content";
-import type { Question } from "@/lib/content/types";
+import { questionsOfDomain, trackContent } from "@/content";
+import type { Question, TrackId } from "@/lib/content/types";
 import { EXAM_QUESTIONS } from "./constants";
 import { makeRng, shuffle } from "./random";
 
@@ -7,8 +7,8 @@ import { makeRng, shuffle } from "./random";
  * Скільки питань кожного домену потрапляє в екзамен.
  * Найбільші залишки округлення дістаються найважчим доменам — сума завжди рівно EXAM_QUESTIONS.
  */
-export function examQuota(total = EXAM_QUESTIONS): Record<string, number> {
-  const raw = allDomains.map((d) => ({ id: d.id, exact: d.weight * total }));
+export function examQuota(track: TrackId, total = EXAM_QUESTIONS): Record<string, number> {
+  const raw = trackContent(track).domains.map((d) => ({ id: d.id, exact: d.weight * total }));
   const quota: Record<string, number> = {};
   let assigned = 0;
   for (const item of raw) {
@@ -27,9 +27,10 @@ export function examQuota(total = EXAM_QUESTIONS): Record<string, number> {
   return quota;
 }
 
-export function buildExam(seed: number, total = EXAM_QUESTIONS): Question[] {
+export function buildExam(track: TrackId, seed: number, total = EXAM_QUESTIONS): Question[] {
+  const allDomains = trackContent(track).domains;
   const rng = makeRng(seed);
-  const quota = examQuota(total);
+  const quota = examQuota(track, total);
   const picked: Question[] = [];
   for (const domain of allDomains) {
     const pool = shuffle(questionsOfDomain(domain.id), rng);

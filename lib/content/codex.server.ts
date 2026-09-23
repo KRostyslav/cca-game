@@ -1,10 +1,18 @@
 import "server-only";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { CodexEntry, DomainId } from "./types";
+import type { CodexEntry, DomainId, TrackId } from "./types";
 import { codexEntrySchema } from "./schema";
 
-const CODEX_DIR = join(process.cwd(), "content", "codex");
+/**
+ * Статті Architect лишилися на старому місці; у Developer — свій каталог.
+ * Шляхи записані літералами, щоб бандлер трасував лише ці два каталоги, а не весь проєкт.
+ */
+function codexDir(track: TrackId): string {
+  return track === "developer"
+    ? join(process.cwd(), "content", "developer", "codex")
+    : join(process.cwd(), "content", "codex");
+}
 
 /** Мінімальний парсер frontmatter — зайва залежність тут не потрібна. */
 function parseFrontmatter(raw: string): { meta: Record<string, string>; body: string } {
@@ -22,10 +30,12 @@ function parseFrontmatter(raw: string): { meta: Record<string, string>; body: st
   return { meta, body };
 }
 
-export function readCodexEntry(slug: string): CodexEntry | null {
+export function readCodexEntry(track: TrackId, slug: string): CodexEntry | null {
+  // slug приходить з URL — не даємо вийти за межі каталогу.
+  if (!/^[a-z0-9-]+$/.test(slug)) return null;
   let raw: string;
   try {
-    raw = readFileSync(join(CODEX_DIR, `${slug}.md`), "utf8");
+    raw = readFileSync(join(codexDir(track), `${slug}.md`), "utf8");
   } catch {
     return null;
   }
@@ -40,9 +50,9 @@ export function readCodexEntry(slug: string): CodexEntry | null {
   return codexEntrySchema.safeParse(entry).success ? entry : null;
 }
 
-export function listCodexEntries(): CodexEntry[] {
-  return readdirSync(CODEX_DIR)
+export function listCodexEntries(track: TrackId): CodexEntry[] {
+  return readdirSync(codexDir(track))
     .filter((f) => f.endsWith(".md"))
-    .map((f) => readCodexEntry(f.replace(/\.md$/, "")))
+    .map((f) => readCodexEntry(track, f.replace(/\.md$/, "")))
     .filter((e): e is CodexEntry => e !== null);
 }

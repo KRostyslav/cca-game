@@ -23,9 +23,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CCA-F Quest — тренажер для Claude Certified Architect",
+  title: "Claude Quest — тренажери Architect і Developer",
   description:
-    "Ігровий тренажер підготовки до сертифікації Anthropic Claude Certified Architect – Foundations: 5 світів, 30 рівнів, 150 питань, довідник і симуляція екзамену.",
+    "Ігрові тренажери підготовки до сертифікацій Anthropic: Claude Certified Architect і Claude Certified Developer. Світи, рівні, боси, довідник і симуляція екзамену.",
 };
 
 export const viewport: Viewport = {
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1">{children}</main>
           <footer className="mt-20 border-t border-hairline px-5 py-6 sm:px-8">
             <p className="eyebrow">
-              CCA-F Quest · прогрес зберігається лише у вашому браузері
+              Claude Quest · прогрес кожного тренажера зберігається лише у вашому браузері
             </p>
           </footer>
         </div>

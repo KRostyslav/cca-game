@@ -6,7 +6,14 @@ export const domainIdSchema = z.enum([
   "prompt-engineering",
   "tool-design-mcp",
   "context-reliability",
+  "dev-api",
+  "dev-tools",
+  "dev-claude-code",
+  "dev-agents-mcp",
+  "dev-production",
 ]);
+
+export const trackIdSchema = z.enum(["architect", "developer"]);
 
 export const choiceSchema = z.object({
   id: z.string().min(1),
@@ -72,6 +79,7 @@ export const levelSchema = z.object({
 
 export const domainSchema = z.object({
   id: domainIdSchema,
+  track: trackIdSchema,
   index: z.number().int().positive(),
   title: z.string().min(1),
   titleUk: z.string().min(1),

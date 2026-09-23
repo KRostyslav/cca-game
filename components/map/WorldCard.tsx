@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Domain } from "@/lib/content/types";
 import type { WorldSummary } from "@/lib/game/selectors";
 import { Meter } from "@/components/ui/Meter";
+import { useTrackHref } from "@/lib/store/trackContext";
 
 export function WorldCard({
   domain,
@@ -14,6 +15,7 @@ export function WorldCard({
   summary: WorldSummary;
   index: number;
 }) {
+  const href = useTrackHref();
   const locked = !summary.unlocked;
   const body = (
     <>
@@ -83,7 +85,7 @@ export function WorldCard({
 
   return (
     <Link
-      href={`/world/${domain.id}`}
+      href={href(`/world/${domain.id}`)}
       className={`${shell} hover:-translate-y-1`}
       style={{ animationDelay: `${index * 70}ms` }}
       onMouseEnter={(e) => {

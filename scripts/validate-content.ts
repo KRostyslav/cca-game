@@ -1,5 +1,5 @@
 /**
- * Перевіряє цілісність навчального контенту перед білдом.
+ * Перевіряє цілісність навчального контенту обох тренажерів перед білдом.
  * Запуск: npm run validate:content
  */
 import { existsSync, readdirSync } from "node:fs";
@@ -10,8 +10,11 @@ import {
   allQuestions,
   levelsOfDomain,
   questionsOfLevel,
+  trackContent,
   translatedQuestionIds,
 } from "../content";
+import { getTrack, trackIds } from "../content/tracks";
+import type { TrackId } from "../lib/content/types";
 import { domainSchema, levelSchema, questionSchema } from "../lib/content/schema";
 import {
   EXAM_QUESTIONS,
@@ -30,9 +33,19 @@ for (const domain of allDomains) {
   }
 }
 
-const weightSum = allDomains.reduce((acc, d) => acc + d.weight, 0);
-if (Math.abs(weightSum - 1) > 0.001) {
-  errors.push(`Сума ваг доменів = ${weightSum.toFixed(3)}, має бути 1.000`);
+// Id доменів, рівнів і питань мають бути унікальними між треками: глобальні getDomain/getLevel/getQuestion
+// і SRS-картки покладаються на це.
+const domainIds = new Set<string>();
+for (const domain of allDomains) {
+  if (domainIds.has(domain.id)) errors.push(`Дубльований id домену: ${domain.id}`);
+  domainIds.add(domain.id);
+}
+
+for (const track of trackIds) {
+  const weightSum = trackContent(track).domains.reduce((acc, d) => acc + d.weight, 0);
+  if (Math.abs(weightSum - 1) > 0.001) {
+    errors.push(`[${track}] Сума ваг доменів = ${weightSum.toFixed(3)}, має бути 1.000`);
+  }
 }
 
 const levelIds = new Set<string>();
@@ -110,40 +123,56 @@ if (missingEn.length > 0) {
   );
 }
 
-// Довідники: кожен codexRef має мати файл, і кожен рівень — свою статтю.
-const codexDir = join(process.cwd(), "content", "codex");
-const codexFiles = existsSync(codexDir)
-  ? new Set(readdirSync(codexDir).filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, "")))
-  : new Set<string>();
+// Довідники: кожен codexRef має мати файл у каталозі свого треку, і кожен рівень — свою статтю.
+const CODEX_DIRS: Record<TrackId, string> = {
+  architect: join("content", "codex"),
+  developer: join("content", "developer", "codex"),
+};
+const codexCount: Record<string, number> = {};
+const codexOwner = new Map<string, TrackId>();
 
-for (const ref of new Set([...allLevels.map((l) => l.codexRef), ...allQuestions.map((q) => q.codexRef)])) {
-  if (!codexFiles.has(ref)) errors.push(`Немає статті довідника: content/codex/${ref}.md`);
-}
-for (const slug of codexFiles) {
-  if (!allLevels.some((l) => l.codexRef === slug)) {
-    warnings.push(`Стаття ${slug}.md не прив'язана до жодного рівня — вона лишиться заблокованою`);
-  }
-}
+for (const track of trackIds) {
+  const { domains, levels, questions } = trackContent(track);
+  const dir = join(process.cwd(), CODEX_DIRS[track]);
+  const codexFiles = existsSync(dir)
+    ? new Set(readdirSync(dir).filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, "")))
+    : new Set<string>();
+  codexCount[track] = codexFiles.size;
 
-// Розподіл питань має відповідати вагам екзамену з допуском ±3 в.п.
-for (const domain of allDomains) {
-  const count = allQuestions.filter((q) => q.domainId === domain.id).length;
-  const share = count / allQuestions.length;
-  const delta = Math.abs(share - domain.weight);
-  if (delta > 0.03) {
-    warnings.push(
-      `Домен ${domain.id}: ${count} питань = ${(share * 100).toFixed(1)}%, вага екзамену ${(domain.weight * 100).toFixed(0)}%`,
-    );
+  for (const slug of codexFiles) {
+    const other = codexOwner.get(slug);
+    if (other) errors.push(`Стаття ${slug}.md є і в ${other}, і в ${track} — slug-и мають бути унікальними`);
+    codexOwner.set(slug, track);
   }
-  const quota = examQuota()[domain.id];
-  if (count < quota) {
-    errors.push(`Домен ${domain.id}: ${count} питань, а екзамен потребує ${quota}`);
+  for (const ref of new Set([...levels.map((l) => l.codexRef), ...questions.map((q) => q.codexRef)])) {
+    if (!codexFiles.has(ref)) errors.push(`[${track}] Немає статті довідника: ${CODEX_DIRS[track]}/${ref}.md`);
   }
-}
+  for (const slug of codexFiles) {
+    if (!levels.some((l) => l.codexRef === slug)) {
+      warnings.push(`[${track}] Стаття ${slug}.md не прив'язана до жодного рівня — вона лишиться заблокованою`);
+    }
+  }
 
-const quotaSum = Object.values(examQuota()).reduce((a, b) => a + b, 0);
-if (quotaSum !== EXAM_QUESTIONS) {
-  errors.push(`Квота екзамену дає ${quotaSum} питань замість ${EXAM_QUESTIONS}`);
+  // Розподіл питань має відповідати вагам екзамену з допуском ±3 в.п.
+  const quotas = examQuota(track);
+  for (const domain of domains) {
+    const count = questions.filter((q) => q.domainId === domain.id).length;
+    const share = count / questions.length;
+    const delta = Math.abs(share - domain.weight);
+    if (delta > 0.03) {
+      warnings.push(
+        `[${track}] Домен ${domain.id}: ${count} питань = ${(share * 100).toFixed(1)}%, вага екзамену ${(domain.weight * 100).toFixed(0)}%`,
+      );
+    }
+    if (count < quotas[domain.id]) {
+      errors.push(`[${track}] Домен ${domain.id}: ${count} питань, а екзамен потребує ${quotas[domain.id]}`);
+    }
+  }
+
+  const quotaSum = Object.values(quotas).reduce((a, b) => a + b, 0);
+  if (quotaSum !== EXAM_QUESTIONS) {
+    errors.push(`[${track}] Квота екзамену дає ${quotaSum} питань замість ${EXAM_QUESTIONS}`);
+  }
 }
 
 // Довідково: перекос у сирих даних не критичний — порядок варіантів
@@ -156,30 +185,35 @@ for (const question of allQuestions) {
   positions[key] = (positions[key] ?? 0) + 1;
 }
 
-console.log(`Доменів: ${allDomains.length}`);
-console.log(`Рівнів: ${allLevels.length} (босів: ${allLevels.filter((l) => l.boss).length})`);
-console.log(`Питань: ${allQuestions.length}`);
-console.log(`Статей довідника: ${codexFiles.size}`);
-console.log(`Англійський дубль: ${translated.size}/${allQuestions.length}`);
-console.log("Пули рівнів (питань у пулі → скільки з них за спробу):");
-for (const domain of allDomains) {
-  const row = levelsOfDomain(domain.id)
-    .map((l) => `${l.id}=${questionsOfLevel(l.id).length}`)
-    .join(" ");
-  console.log(`  ${domain.id.padEnd(24)} ${row}`);
+for (const track of trackIds) {
+  const { domains, levels, questions } = trackContent(track);
+  console.log(`\n── ${getTrack(track)?.code} · ${getTrack(track)?.label} ──`);
+  console.log(`Доменів: ${domains.length}`);
+  console.log(`Рівнів: ${levels.length} (босів: ${levels.filter((l) => l.boss).length})`);
+  console.log(`Питань: ${questions.length}`);
+  console.log(`Статей довідника: ${codexCount[track]}`);
+  console.log(`Англійський дубль: ${questions.filter((q) => translated.has(q.id)).length}/${questions.length}`);
+  console.log("Пули рівнів (питань у пулі → скільки з них за спробу):");
+  for (const domain of domains) {
+    const row = levelsOfDomain(domain.id)
+      .map((l) => `${l.id}=${questionsOfLevel(l.id).length}`)
+      .join(" ");
+    console.log(`  ${domain.id.padEnd(24)} ${row}`);
+  }
+  for (const domain of domains) {
+    const count = questions.filter((q) => q.domainId === domain.id).length;
+    console.log(
+      `  ${domain.id.padEnd(24)} ${String(levelsOfDomain(domain.id).length).padStart(2)} рівнів  ${String(count).padStart(3)} питань  вага ${(domain.weight * 100).toFixed(0)}%`,
+    );
+  }
 }
+console.log();
 console.log(
   `Позиція правильної відповіді в сирих даних: ${Object.entries(positions)
     .sort()
     .map(([k, v]) => `${k}=${v}`)
     .join(" ")} (на показі перемішується)`,
 );
-for (const domain of allDomains) {
-  const count = allQuestions.filter((q) => q.domainId === domain.id).length;
-  console.log(
-    `  ${domain.id.padEnd(24)} ${String(levelsOfDomain(domain.id).length).padStart(2)} рівнів  ${String(count).padStart(3)} питань  вага ${(domain.weight * 100).toFixed(0)}%`,
-  );
-}
 
 if (warnings.length > 0) {
   console.log("\nПопередження:");

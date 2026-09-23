@@ -55,5 +55,7 @@ describe("рівні персонажа", () => {
   it("титул змінюється з рівнем", () => {
     expect(titleForLevel(1)).toBe("Intern");
     expect(titleForLevel(20)).toBe("Claude Certified Architect");
+    expect(titleForLevel(20, "developer")).toBe("Claude Certified Developer");
+    expect(titleForLevel(1, "developer")).toBe("Intern");
   });
 });

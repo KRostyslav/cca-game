@@ -1,12 +1,15 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { getLevel, allLevels } from "@/content";
+import { getLevel, trackContent } from "@/content";
 import { ButtonLink } from "@/components/ui/Button";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useHydrated } from "@/lib/store/useHydrated";
+import { useTrackHref, useTrackId } from "@/lib/store/trackContext";
 
 export function CodexGate({ slug, children }: { slug: string; children: ReactNode }) {
+  const trackId = useTrackId();
+  const href = useTrackHref();
   const hydrated = useHydrated();
   const unlocked = useGameStore((s) => s.unlocked.codex);
 
@@ -16,7 +19,7 @@ export function CodexGate({ slug, children }: { slug: string; children: ReactNod
 
   if (unlocked.includes(slug)) return <>{children}</>;
 
-  const level = allLevels.find((l) => l.codexRef === slug);
+  const level = trackContent(trackId).levels.find((l) => l.codexRef === slug);
   const target = level ? getLevel(level.id) : undefined;
 
   return (
@@ -28,7 +31,7 @@ export function CodexGate({ slug, children }: { slug: string; children: ReactNod
           : "Цю сторінку ще не відкрито."}
       </p>
       {target && (
-        <ButtonLink href={`/play/${target.id}`} variant="primary" className="mt-7">
+        <ButtonLink href={href(`/play/${target.id}`)} variant="primary" className="mt-7">
           До рівня →
         </ButtonLink>
       )}

@@ -7,6 +7,7 @@ import type { Domain } from "@/lib/content/types";
 export const domains: Domain[] = [
   {
     id: "agentic-architecture",
+    track: "architect",
     index: 1,
     title: "Agentic Architecture & Orchestration",
     titleUk: "Долина Агентів",
@@ -18,6 +19,7 @@ export const domains: Domain[] = [
   },
   {
     id: "claude-code",
+    track: "architect",
     index: 2,
     title: "Claude Code Configuration & Workflows",
     titleUk: "Фортеця Конфігурації",
@@ -29,6 +31,7 @@ export const domains: Domain[] = [
   },
   {
     id: "prompt-engineering",
+    track: "architect",
     index: 3,
     title: "Prompt Engineering & Structured Output",
     titleUk: "Бібліотека Промптів",
@@ -40,6 +43,7 @@ export const domains: Domain[] = [
   },
   {
     id: "tool-design-mcp",
+    track: "architect",
     index: 4,
     title: "Tool Design & MCP Integration",
     titleUk: "Кузня Інструментів",
@@ -51,6 +55,7 @@ export const domains: Domain[] = [
   },
   {
     id: "context-reliability",
+    track: "architect",
     index: 5,
     title: "Context Management & Reliability",
     titleUk: "Вежа Контексту",

@@ -6,8 +6,10 @@ import type { Domain } from "@/lib/content/types";
 import { Stars } from "@/components/ui/Stars";
 import { QUESTIONS_PER_BOSS, QUESTIONS_PER_LEVEL } from "@/lib/game/constants";
 import { isLevelUnlocked, useGameStore } from "@/lib/store/gameStore";
+import { useTrackHref } from "@/lib/store/trackContext";
 
 export function LevelPath({ domain }: { domain: Domain }) {
+  const href = useTrackHref();
   const store = useGameStore();
   const levels = levelsOfDomain(domain.id);
 
@@ -80,7 +82,7 @@ export function LevelPath({ domain }: { domain: Domain }) {
         return (
           <li key={level.id} className="rise" style={{ animationDelay: `${i * 55}ms` }}>
             {unlocked ? (
-              <Link href={`/play/${level.id}`} className={`${cls} hover:border-hairline hover:bg-panel`}>
+              <Link href={href(`/play/${level.id}`)} className={`${cls} hover:border-hairline hover:bg-panel`}>
                 {node}
               </Link>
             ) : (

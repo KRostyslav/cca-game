@@ -1,4 +1,4 @@
-import { allDomains, allLevels, levelsOfDomain } from "@/content";
+import { levelsOfDomain, trackContent } from "@/content";
 import type { DomainId } from "@/lib/content/types";
 import type { GameStore } from "@/lib/store/gameStore";
 import { isLevelUnlocked, isWorldUnlocked } from "@/lib/store/gameStore";
@@ -29,11 +29,12 @@ export function worldSummary(s: GameStore, id: DomainId): WorldSummary {
 }
 
 export function allWorldSummaries(s: GameStore): WorldSummary[] {
-  return allDomains.map((d) => worldSummary(s, d.id));
+  return trackContent(s.trackId).domains.map((d) => worldSummary(s, d.id));
 }
 
 /** Наступний рівень, який має сенс пройти: перший розблокований і не завершений. */
 export function nextPlayableLevel(s: GameStore): string | undefined {
+  const allLevels = trackContent(s.trackId).levels;
   const notCleared = allLevels.find(
     (l) => isLevelUnlocked(s, l.id) && (s.progress[l.id]?.stars ?? 0) === 0,
   );
@@ -46,6 +47,7 @@ export function nextPlayableLevel(s: GameStore): string | undefined {
 }
 
 export function totalStars(s: GameStore): { stars: number; max: number } {
+  const allLevels = trackContent(s.trackId).levels;
   return {
     stars: allLevels.reduce((acc, l) => acc + (s.progress[l.id]?.stars ?? 0), 0),
     max: allLevels.length * 3,
